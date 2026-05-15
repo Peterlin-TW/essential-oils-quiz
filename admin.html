@@ -1,100 +1,137 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <title>精油測驗 - 老師管理後台</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-        select, button { padding: 8px 15px; border-radius: 5px; border: 1px solid #ddd; }
-        canvas { max-width: 400px; margin: 0 auto; }
-        .stats-info { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>精油測驗 - 數據分析後台</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Noto Sans TC', sans-serif; background: #f8f9fa; padding: 20px; color: #333; }
+    .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    h1 { text-align: center; color: #5c4a3c; margin-bottom: 30px; }
+    
+    .controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; background: #fdf6f0; padding: 15px; border-radius: 12px; }
+    select, button { padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; cursor: pointer; }
+    button { background: #ff9a62; color: white; border: none; font-weight: bold; }
+    button:hover { background: #ff8542; }
+
+    .chart-container { position: relative; margin: auto; height: 400px; width: 400px; }
+    
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px; }
+    .stat-card { background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 15px; text-align: center; }
+    .stat-card h3 { font-size: 0.9rem; color: #888; margin-bottom: 10px; }
+    .stat-card p { font-size: 1.8rem; font-weight: bold; color: #ff9a62; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>測驗數據統計結果</h1>
-        
-        <div class="controls">
-            <label>篩選範圍：</label>
-            <select id="rangeSelect">
-                <option value="all">全部時間</option>
-                <option value="day">今日</option>
-                <option value="week">本週</option>
-                <option value="month">本月</option>
-            </select>
-            <button onclick="loadData()">重新整理</button>
-        </div>
 
-        <canvas id="myChart"></canvas>
+<div class="container">
+  <h1>精油測驗數據後台</h1>
 
-        <div id="statsList" class="stats-info">
-            <p>正在載入數據...</p>
-        </div>
-    </div>
+  <div class="controls">
+    <label>時間範圍：</label>
+    <select id="dateFilter">
+      <option value="all">所有資料</option>
+      <option value="day">今日數據</option>
+      <option value="week">最近 7 天</option>
+      <option value="month">本月數據</option>
+    </select>
+    <button onclick="fetchData()">重新整理</button>
+  </div>
 
-    <script>
-        const ADMIN_API = "您的API網址?type=admin";
-        let chart = null;
+  <div class="chart-container">
+    <canvas id="resultChart"></canvas>
+  </div>
 
-        async function loadData() {
-            const range = document.getElementById('rangeSelect').value;
-            try {
-                const response = await fetch(ADMIN_API);
-                const allData = await response.json();
-                const filteredData = filterByDate(allData, range);
-                updateStats(filteredData);
-            } catch (e) {
-                alert("讀取失敗，請確認 API 設定");
-            }
+  <div class="summary" id="summaryStats">
+    <div class="stat-card"><h3>總填答人數</h3><p id="totalCount">0</p></div>
+    <div class="stat-card"><h3>最受歡迎類型</h3><p id="topType">-</p></div>
+    <div class="stat-card"><h3>熱門產品點擊</h3><p id="topProduct">-</p></div>
+  </div>
+</div>
+
+<script>
+  // 💡 請將此 API 換成您的 Google Apps Script 網址
+  const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec?type=admin";
+
+  let myChart = null;
+
+  async function fetchData() {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      processAndDisplay(data);
+    } catch (err) {
+      alert("讀取資料失敗，請確認 API 設定。");
+    }
+  }
+
+  function processAndDisplay(data) {
+    const filter = document.getElementById('dateFilter').value;
+    const now = new Date();
+    
+    // 時間過濾
+    const filtered = data.filter(item => {
+      if (filter === 'all') return true;
+      const d = new Date(item.date);
+      if (filter === 'day') return d.toDateString() === now.toDateString();
+      if (filter === 'week') return (now - d) / (1000 * 60 * 60 * 24) <= 7;
+      if (filter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      return true;
+    });
+
+    // 統計類型佔比
+    const typeCounts = { 'TypeA': 0, 'TypeB': 0, 'TypeC': 0 };
+    const productCounts = {};
+
+    filtered.forEach(item => {
+      typeCounts[item.resultType]++;
+      // 統計產品
+      if (item.selectedProducts) {
+        item.selectedProducts.split(', ').forEach(p => {
+          if (p && p !== "無") productCounts[p] = (productCounts[p] || 0) + 1;
+        });
+      }
+    });
+
+    // 更新看板
+    document.getElementById('totalCount').innerText = filtered.length;
+    const topT = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
+    document.getElementById('topType').innerText = filtered.length > 0 ? topT : "-";
+    
+    const productKeys = Object.keys(productCounts);
+    const topP = productKeys.length > 0 ? productKeys.reduce((a, b) => productCounts[a] > productCounts[b] ? a : b) : "無";
+    document.getElementById('topProduct').innerText = topP;
+
+    // 繪製圓餅圖
+    updateChart(typeCounts);
+  }
+
+  function updateChart(counts) {
+    const ctx = document.getElementById('resultChart').getContext('2d');
+    if (myChart) myChart.destroy();
+
+    myChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['舒壓放鬆 (A)', '能量扎根 (B)', '動力喚醒 (C)'],
+        datasets: [{
+          data: [counts.TypeA, counts.TypeB, counts.TypeC],
+          backgroundColor: ['#ff9a62', '#7d6b5d', '#ffcc80'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
         }
+      }
+    });
+  }
 
-        function filterByDate(data, range) {
-            if (range === 'all') return data;
-            const now = new Date();
-            return data.filter(item => {
-                const itemDate = new Date(item.date);
-                if (range === 'day') return itemDate.toDateString() === now.toDateString();
-                if (range === 'week') {
-                    const oneWeekAgo = new Date().setDate(now.getDate() - 7);
-                    return itemDate >= oneWeekAgo;
-                }
-                if (range === 'month') return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
-            });
-        }
+  window.onload = fetchData;
+</script>
 
-        function updateStats(data) {
-            const counts = { 'TypeA': 0, 'TypeB': 0, 'TypeC': 0 };
-            data.forEach(item => { if(counts[item.resultType] !== undefined) counts[item.resultType]++; });
-
-            // 更新列表文字
-            document.getElementById('statsList').innerHTML = `
-                <p>總填答人數：${data.length} 人</p>
-                <ul>
-                    <li>舒緩放鬆 (TypeA): ${counts.TypeA} 人</li>
-                    <li>安定專注 (TypeB): ${counts.TypeB} 人</li>
-                    <li>充滿活力 (TypeC): ${counts.TypeC} 人</li>
-                </ul>
-            `;
-
-            // 更新圓餅圖
-            const ctx = document.getElementById('myChart').getContext('2d');
-            if (chart) chart.destroy();
-            chart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['舒緩放鬆', '安定專注', '充滿活力'],
-                    datasets: [{
-                        data: [counts.TypeA, counts.TypeB, counts.TypeC],
-                        backgroundColor: ['#ff9a62', '#7d6b5d', '#ffcc80']
-                    }]
-                }
-            });
-        }
-
-        window.onload = loadData;
-    </script>
 </body>
 </html>
