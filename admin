@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>精油測驗 - 老師管理後台</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        select, button { padding: 8px 15px; border-radius: 5px; border: 1px solid #ddd; }
+        canvas { max-width: 400px; margin: 0 auto; }
+        .stats-info { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>測驗數據統計結果</h1>
+        
+        <div class="controls">
+            <label>篩選範圍：</label>
+            <select id="rangeSelect">
+                <option value="all">全部時間</option>
+                <option value="day">今日</option>
+                <option value="week">本週</option>
+                <option value="month">本月</option>
+            </select>
+            <button onclick="loadData()">重新整理</button>
+        </div>
+
+        <canvas id="myChart"></canvas>
+
+        <div id="statsList" class="stats-info">
+            <p>正在載入數據...</p>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_API = "您的API網址?type=admin";
+        let chart = null;
+
+        async function loadData() {
+            const range = document.getElementById('rangeSelect').value;
+            try {
+                const response = await fetch(ADMIN_API);
+                const allData = await response.json();
+                const filteredData = filterByDate(allData, range);
+                updateStats(filteredData);
+            } catch (e) {
+                alert("讀取失敗，請確認 API 設定");
+            }
+        }
+
+        function filterByDate(data, range) {
+            if (range === 'all') return data;
+            const now = new Date();
+            return data.filter(item => {
+                const itemDate = new Date(item.date);
+                if (range === 'day') return itemDate.toDateString() === now.toDateString();
+                if (range === 'week') {
+                    const oneWeekAgo = new Date().setDate(now.getDate() - 7);
+                    return itemDate >= oneWeekAgo;
+                }
+                if (range === 'month') return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+            });
+        }
+
+        function updateStats(data) {
+            const counts = { 'TypeA': 0, 'TypeB': 0, 'TypeC': 0 };
+            data.forEach(item => { if(counts[item.resultType] !== undefined) counts[item.resultType]++; });
+
+            // 更新列表文字
+            document.getElementById('statsList').innerHTML = `
+                <p>總填答人數：${data.length} 人</p>
+                <ul>
+                    <li>舒緩放鬆 (TypeA): ${counts.TypeA} 人</li>
+                    <li>安定專注 (TypeB): ${counts.TypeB} 人</li>
+                    <li>充滿活力 (TypeC): ${counts.TypeC} 人</li>
+                </ul>
+            `;
+
+            // 更新圓餅圖
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['舒緩放鬆', '安定專注', '充滿活力'],
+                    datasets: [{
+                        data: [counts.TypeA, counts.TypeB, counts.TypeC],
+                        backgroundColor: ['#ff9a62', '#7d6b5d', '#ffcc80']
+                    }]
+                }
+            });
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
