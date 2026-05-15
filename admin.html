@@ -10,13 +10,15 @@
     .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
     h1 { text-align: center; color: #5c4a3c; margin-bottom: 30px; }
     
-    .controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; background: #fdf6f0; padding: 15px; border-radius: 12px; }
-    select, button { padding: 10px 20px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; cursor: pointer; }
-    button { background: #ff9a62; color: white; border: none; font-weight: bold; }
+    /* 💡 日期選擇器區塊樣式修正 */
+    .controls { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; background: #fdf6f0; padding: 20px; border-radius: 12px; }
+    .controls label { font-weight: bold; color: #7d6b5d; }
+    input[type="date"], button { padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.95rem; }
+    button { background: #ff9a62; color: white; border: none; font-weight: bold; cursor: pointer; transition: background 0.3s; }
     button:hover { background: #ff8542; }
 
     .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
-    .stat-card { background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 15px; text-align: center; transition: transform 0.3s; }
+    .stat-card { background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 15px; text-align: center; }
     .stat-card h3 { font-size: 0.9rem; color: #888; margin-bottom: 10px; }
     .stat-card p { font-size: 1.4rem; font-weight: bold; color: #ff9a62; line-height: 1.4; }
 
@@ -25,7 +27,6 @@
 
     .chart-container { position: relative; height: 300px; width: 100%; margin: auto; }
 
-    /* 表格樣式 */
     .table-container { margin-top: 40px; overflow-x: auto; background: white; border-radius: 15px; border: 1px solid #eee; }
     table { width: 100%; border-collapse: collapse; min-width: 600px; }
     th { background: #fdf6f0; color: #5c4a3c; padding: 15px; text-align: left; font-size: 0.9rem; border-bottom: 2px solid #ff9a62; }
@@ -44,18 +45,15 @@
   <h1>精油測驗數據分析</h1>
 
   <div class="controls">
-    <label>時間範圍：</label>
-    <select id="dateFilter" onchange="fetchData()">
-      <option value="all">所有資料</option>
-      <option value="day">今日數據</option>
-      <option value="week">最近 7 天</option>
-      <option value="month">本月數據</option>
-    </select>
-    <button onclick="fetchData()">手動更新數據</button>
+    <label>指定期間：</label>
+    <input type="date" id="startDate">
+    <span>至</span>
+    <input type="date" id="endDate">
+    <button onclick="fetchData()">更新數據</button>
   </div>
 
   <div class="summary">
-    <div class="stat-card"><h3>總填答人數</h3><p id="totalCount">0 人</p></div>
+    <div class="stat-card"><h3>篩選人數</h3><p id="totalCount">0 人</p></div>
     <div class="stat-card"><h3>最受歡迎類型</h3><p id="topType">-</p></div>
     <div class="stat-card"><h3>熱門產品點擊</h3><p id="topProduct">-</p></div>
   </div>
@@ -64,25 +62,25 @@
     <div class="chart-container">
       <canvas id="resultChart"></canvas>
     </div>
-    <div>
-        <p style="color: #888; font-size: 0.9rem; line-height: 1.6;">💡 圓餅圖顯示了目前所有填答者的潛在需求比例，老師可以根據此數據準備對應類型的精油教材或贈品。</p>
+    <div style="background: #fcfcfc; padding: 20px; border-radius: 15px; border: 1px dashed #ddd;">
+        <h4 style="margin-bottom:10px; color:#5c4a3c;">數據洞察說明</h4>
+        <p style="color: #666; font-size: 0.9rem; line-height: 1.6;">此報告反映選定時間內的顧客意向。圓餅圖可協助老師判斷近期顧客偏好的氣味調性，表格則提供具體名單，方便老師針對顧客點選的精油進行 1 對 1 的芳療建議。</p>
     </div>
   </div>
 
   <div class="table-container">
-    <h2 style="padding: 20px; font-size: 1.2rem; color: #5c4a3c; border-bottom: 1px solid #eee;">最新填答名單</h2>
+    <h2 style="padding: 20px; font-size: 1.2rem; color: #5c4a3c; border-bottom: 1px solid #eee;">詳細填答名單</h2>
     <table>
       <thead>
         <tr>
-          <th>填寫時間</th>
+          <th>時間</th>
           <th>姓名</th>
           <th>聯絡方式</th>
-          <th>測驗結果</th>
-          <th>感興趣的精油細項</th>
+          <th>結果</th>
+          <th>感興趣的精油</th>
         </tr>
       </thead>
-      <tbody id="memberTable">
-        </tbody>
+      <tbody id="memberTable"></tbody>
     </table>
   </div>
 </div>
@@ -97,65 +95,74 @@
   };
 
   let myChart = null;
+  let allRawData = []; // 儲存原始資料
+
+  // 💡 初始化：預設顯示本月 1 號到今天
+  window.onload = () => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    
+    fetchData();
+  };
 
   async function fetchData() {
     try {
+      // 第一次抓取時先存入 allRawData，之後篩選就不必重複請求 API
       const response = await fetch(API_URL);
-      const data = await response.json();
-      processAndDisplay(data);
+      allRawData = await response.json();
+      applyFilterAndRender();
     } catch (err) {
       alert("載入失敗，請確認 API 設定。");
     }
   }
 
-  function processAndDisplay(data) {
-    const filter = document.getElementById('dateFilter').value;
-    const now = new Date();
-    
-    // 過濾資料
-    const filtered = data.filter(item => {
-      if (filter === 'all') return true;
-      const d = new Date(item.date);
-      if (filter === 'day') return d.toDateString() === now.toDateString();
-      if (filter === 'week') return (now - d) / (1000 * 60 * 60 * 24) <= 7;
-      if (filter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      return true;
-    }).reverse(); // 最新的排在前面
+  function applyFilterAndRender() {
+    const start = new Date(document.getElementById('startDate').value);
+    const end = new Date(document.getElementById('endDate').value);
+    // 設定結束時間到當天的 23:59:59 確保包含當天
+    end.setHours(23, 59, 59, 999);
 
+    // 💡 執行日期篩選
+    const filtered = allRawData.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= start && itemDate <= end;
+    }).reverse();
+
+    renderDashboard(filtered);
+  }
+
+  function renderDashboard(data) {
     const typeCounts = { 'TypeA': 0, 'TypeB': 0, 'TypeC': 0 };
     const productCounts = {};
     const tableBody = document.getElementById('memberTable');
     tableBody.innerHTML = '';
 
-    filtered.forEach(item => {
-      // 統計圖表數據
+    data.forEach(item => {
       if (typeCounts.hasOwnProperty(item.resultType)) typeCounts[item.resultType]++;
-      
-      // 統計產品點擊
       if (item.selectedProducts) {
         item.selectedProducts.split(', ').forEach(p => {
           if (p && p !== "無") productCounts[p] = (productCounts[p] || 0) + 1;
         });
       }
 
-      // 💡 渲染表格列
       const typeInfo = typeMap[item.resultType] || { name: item.resultType, class: '' };
-      const row = `
+      tableBody.innerHTML += `
         <tr>
-          <td style="color:#888; font-size:0.8rem;">${new Date(item.date).toLocaleString('zh-TW')}</td>
+          <td style="color:#888; font-size:0.8rem;">${new Date(item.date).toLocaleDateString()}</td>
           <td><strong>${item.name}</strong></td>
           <td>${item.contact}</td>
           <td><span class="tag ${typeInfo.class}">${typeInfo.name}</span></td>
           <td class="product-list">${item.selectedProducts || '未選擇'}</td>
         </tr>
       `;
-      tableBody.innerHTML += row;
     });
 
-    // 更新統計數值
-    document.getElementById('totalCount').innerText = filtered.length + " 人";
-    const topTypeCode = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
-    document.getElementById('topType').innerText = filtered.length > 0 ? (typeMap[topTypeCode] ? typeMap[topTypeCode].name : topTypeCode) : "-";
+    document.getElementById('totalCount').innerText = data.length + " 人";
+    const topT = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
+    document.getElementById('topType').innerText = data.length > 0 ? (typeMap[topT] ? typeMap[topT].name : topT) : "-";
     
     const productKeys = Object.keys(productCounts);
     const topP = productKeys.length > 0 ? productKeys.reduce((a, b) => productCounts[a] > productCounts[b] ? a : b) : "無";
@@ -177,15 +184,9 @@
           borderWidth: 0
         }]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } }
-      }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
   }
-
-  window.onload = fetchData;
 </script>
 
 </body>
