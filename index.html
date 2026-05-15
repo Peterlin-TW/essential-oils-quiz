@@ -137,10 +137,6 @@
       background: #fff3eb;
     }
 
-    .answer-btn:active {
-      transform: scale(0.98);
-    }
-
     .result {
       text-align: center;
     }
@@ -164,19 +160,65 @@
       margin-bottom: 20px;
     }
 
-    .restart-btn {
-      border: none;
-      background: linear-gradient(90deg, #ff9a62, #ffb74d);
-      color: white;
-      padding: 16px 24px;
-      border-radius: 999px;
+    /* 新增：個資表單樣式 */
+    .form-group {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px dashed #d1c4b9;
+      text-align: left;
+    }
+
+    .form-group h3 {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      color: #3b2f2f;
+      text-align: center;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
       font-size: 1rem;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: #ff9a62;
+    }
+
+    .submit-btn {
+      background: #3b2f2f;
+      color: white;
+      border: none;
+      padding: 14px;
+      width: 100%;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .submit-btn:disabled {
+      background: #ccc;
+    }
+
+    .restart-btn {
+      border: 1px solid #ff9a62;
+      background: transparent;
+      color: #ff9a62;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 0.9rem;
       cursor: pointer;
       width: 100%;
       font-weight: bold;
+      margin-top: 10px;
     }
     
-    /* 新增：載入中狀態與隱藏區塊的樣式 */
     .loading-state {
       text-align: center;
       padding: 40px 20px;
@@ -204,23 +246,8 @@
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @media(max-width: 480px){
-      .hero h1 {
-        font-size: 1.7rem;
-      }
-      .question {
-        font-size: 1.2rem;
-      }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -236,13 +263,11 @@
   <div class="container">
     <div class="card">
       
-      <!-- 載入中畫面 -->
       <div id="loadingState" class="loading-state">
         <div class="spinner"></div>
         <p>正在從試算表讀取您的專屬題目...</p>
       </div>
 
-      <!-- 測驗內容區塊 (預設隱藏，讀取完成後顯示) -->
       <div id="quizContent" class="hidden">
         <div class="progress-wrap">
           <div class="progress-text">
@@ -259,22 +284,29 @@
         <div id="answers" class="answers"></div>
       </div>
 
-      <!-- 結果區塊 (預設隱藏) -->
       <div class="result hidden" id="result">
         <h2 id="resultTitle">你的專屬結果</h2>
         <img id="resultImage" src="" alt="Result Image">
         <p id="resultDesc">結果說明文字...</p>
-        <button class="restart-btn" onclick="restartQuiz()">重新探索</button>
+
+        <div class="form-group" id="dataForm">
+          <h3>留下聯絡資訊，獲取老師專屬建議</h3>
+          <input type="text" id="userName" placeholder="您的姓名">
+          <input type="text" id="userContact" placeholder="電話或 Line ID">
+          <button class="submit-btn" id="submitBtn" onclick="sendDataToGoogle()">送出資料並領取建議</button>
+          <p id="statusMsg" style="font-size: 0.8rem; margin-top: 5px;"></p>
+        </div>
+
+        <button class="restart-btn" id="restartBtn" onclick="restartQuiz()">重新測驗</button>
       </div>
 
     </div>
   </div>
 
   <script>
-    // 💡 1. 【重要】請將這裡替換成您 Google Apps Script 的「網頁應用程式網址」
+    // 💡 1. 您的 Google Apps Script 網址
     const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
 
-    // 💡 2. 這裡設定您的「結果資料庫」(與上一版相同)
     const resultOutcomes = {
       TypeA: {
         title: '海洋之息：舒緩放鬆',
@@ -293,22 +325,10 @@
       }
     };
 
-    // 如果沒有串接 API 時的備用測試資料
-    const fallbackQuestions = [
-      {
-        q: '【測試模式】旅行時，你最喜歡哪種景色？',
-        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop',
-        answers: [
-          { text: '海島海景，聽海浪的聲音', value: 'TypeA' },
-          { text: '森林步道，享受綠意盎然', value: 'TypeB' },
-          { text: '充滿陽光的熱情城市', value: 'TypeC' }
-        ]
-      }
-    ];
-
     let questions = []; 
     let current = 0;
     let scores = {};
+    let finalKey = ""; // 存儲最終結果 Key
 
     const loadingState = document.getElementById('loadingState');
     const quizContent = document.getElementById('quizContent');
@@ -320,112 +340,128 @@
     const percentText = document.getElementById('percentText');
     const resultEl = document.getElementById('result');
 
-    // 💡 3. 從 Google 試算表抓取資料
     async function fetchQuestions() {
       try {
-        // 發送請求取得 JSON 資料
         const response = await fetch(API_URL);
         const data = await response.json();
-        
         if(data && data.length > 0) {
           questions = data;
         } else {
-          throw new Error("回傳資料為空");
+          throw new Error("Empty Data");
         }
       } catch (error) {
-        console.warn("無法取得試算表資料，啟用備用測試題庫。請確認 API_URL 是否正確。", error);
-        questions = fallbackQuestions; // 發生錯誤時載入備用題庫
+        console.warn("API Error, using fallback.");
+        questions = [{q:'【連線異常】請重新確認試算表設定', image:'', answers:[]}];
       } finally {
-        // 隱藏載入中畫面，顯示測驗區塊
         loadingState.classList.add('hidden');
         quizContent.classList.remove('hidden');
-        
-        // 初始化計分板
         initScores();
-        // 渲染第一題
         renderQuestion();
       }
     }
 
     function initScores() {
       scores = {};
-      Object.keys(resultOutcomes).forEach(key => {
-        scores[key] = 0;
-      });
+      Object.keys(resultOutcomes).forEach(key => scores[key] = 0);
     }
 
-    // 顯示題目
     function renderQuestion() {
       if (questions.length === 0) return;
-
       const q = questions[current];
       questionEl.innerText = q.q;
-      imageEl.src = q.image;
+      imageEl.src = q.image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800';
       answersEl.innerHTML = '';
 
-      // 動態產生選項按鈕，過濾掉沒有填寫的空白選項
       q.answers.filter(ans => ans.text).forEach(answer => {
         const btn = document.createElement('button');
         btn.className = 'answer-btn';
         btn.innerText = answer.text;
-
         btn.onclick = () => {
-          // 為對應的類型加分
-          if (scores[answer.value] !== undefined) {
-             scores[answer.value]++;
-          } else {
-             scores[answer.value] = 1; 
-          }
+          scores[answer.value] = (scores[answer.value] || 0) + 1;
           nextQuestion();
         };
-
         answersEl.appendChild(btn);
       });
 
-      // 更新進度條
       const progress = ((current + 1) / questions.length) * 100;
       progressEl.style.width = progress + '%';
       stepText.innerText = `第 ${current + 1} 題 / ${questions.length} 題`;
       percentText.innerText = Math.round(progress) + '%';
     }
 
-    // 進入下一題或顯示結果
     function nextQuestion() {
       current++;
-      if (current >= questions.length) {
-        showResult();
-        return;
-      }
+      if (current >= questions.length) { showResult(); return; }
       renderQuestion();
     }
 
-    // 計算並顯示最終結果
     function showResult() {
       quizContent.classList.add('hidden');
+      finalKey = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+      const outcome = resultOutcomes[finalKey] || resultOutcomes['TypeA'];
 
-      // 找出最高分的類型
-      let highestType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-      
-      // 取得對應的結果資料，如果試算表填了未知的 Type，則預設給 TypeA
-      const finalOutcome = resultOutcomes[highestType] || resultOutcomes['TypeA'];
-
-      document.getElementById('resultTitle').innerText = finalOutcome.title;
-      document.getElementById('resultImage').src = finalOutcome.image;
-      document.getElementById('resultDesc').innerText = finalOutcome.desc;
-
+      document.getElementById('resultTitle').innerText = outcome.title;
+      document.getElementById('resultImage').src = outcome.image;
+      document.getElementById('resultDesc').innerText = outcome.desc;
       resultEl.classList.remove('hidden');
     }
 
-    // 重新測驗
+    // 🚀 新增：發送資料到 Google 試算表
+    function sendDataToGoogle() {
+      const name = document.getElementById('userName').value;
+      const contact = document.getElementById('userContact').value;
+      const btn = document.getElementById('submitBtn');
+      const msg = document.getElementById('statusMsg');
+
+      if (!name || !contact) {
+        alert("請填寫姓名與聯絡方式喔！");
+        return;
+      }
+
+      btn.disabled = true;
+      msg.innerText = "傳送中...";
+
+      const payload = {
+        name: name,
+        contact: contact,
+        resultType: finalKey,
+        resultTitle: resultOutcomes[finalKey].title
+      };
+
+      // 使用 POST 傳送
+      fetch(API_URL, {
+        method: 'POST',
+        mode: 'no-cors', // 重要：避免跨網域錯誤
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        msg.style.color = "green";
+        msg.innerText = "✓ 資料已成功送出！老師將會聯絡您。";
+        document.getElementById('dataForm').style.opacity = "0.6";
+        btn.style.display = "none";
+      })
+      .catch(err => {
+        console.error(err);
+        msg.style.color = "red";
+        msg.innerText = "傳送失敗，請稍後再試。";
+        btn.disabled = false;
+      });
+    }
+
     function restartQuiz() {
       current = 0;
       initScores();
+      document.getElementById('userName').value = "";
+      document.getElementById('userContact').value = "";
+      document.getElementById('submitBtn').style.display = "block";
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('statusMsg').innerText = "";
+      document.getElementById('dataForm').style.opacity = "1";
       resultEl.classList.add('hidden');
       quizContent.classList.remove('hidden');
       renderQuestion();
     }
 
-    // 網頁載入時啟動資料抓取
     fetchQuestions();
   </script>
 
