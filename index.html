@@ -26,43 +26,23 @@
     .answer-btn { border: none; background: white; border-radius: 18px; padding: 18px; text-align: left; font-size: 1rem; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     .answer-btn:hover { transform: translateY(-3px); background: #fff3eb; }
 
-    /* 結果區塊與多圖排版 */
+    /* 結果區塊與圖片網格 */
     .result { text-align: center; }
     .result h2 { font-size: 1.8rem; margin-bottom: 15px; color: #5c4a3c; }
-    
-    .image-grid {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin: 20px 0;
-    }
-    .image-grid img {
-      width: calc(48% - 12px);
-      max-width: 160px;
-      height: 110px;
-      object-fit: cover;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      cursor: pointer;
-      border: 4px solid transparent;
-      transition: all 0.3s ease;
-    }
-    
-    .image-grid img.selected {
-      border-color: #ff9a62;
-      transform: scale(1.05);
-      box-shadow: 0 6px 15px rgba(255, 154, 98, 0.4);
-    }
-
+    .image-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+    .image-grid img { width: calc(48% - 12px); max-width: 160px; height: 110px; object-fit: cover; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; border: 4px solid transparent; transition: all 0.3s ease; }
+    .image-grid img.selected { border-color: #ff9a62; transform: scale(1.05); box-shadow: 0 6px 15px rgba(255, 154, 98, 0.4); }
     .result p { line-height: 1.8; color: #5c4a3c; margin-bottom: 20px; font-size: 1rem; }
 
-    /* 表單樣式 */
+    /* 防呆提示與表單 */
+    #countTip { font-size: 0.95rem; font-weight: bold; margin-bottom: 15px; transition: color 0.3s; }
     .form-group { margin-top: 25px; padding: 20px; background: rgba(255, 154, 98, 0.1); border-radius: 20px; text-align: left; }
     .form-group h3 { font-size: 1rem; margin-bottom: 15px; text-align: center; color: #3b2f2f; }
     .form-group input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
-    .submit-btn { background: #3b2f2f; color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; }
-    .submit-btn:disabled { background: #ccc; }
+    
+    .submit-btn { background: #ccc; color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: default; transition: all 0.3s; }
+    .submit-btn.ready { background: #3b2f2f; cursor: pointer; }
+    
     .restart-btn { background: transparent; color: #7d6b5d; border: none; margin-top: 15px; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
 
     .loading-state { text-align: center; padding: 40px 20px; }
@@ -107,11 +87,14 @@
         <p id="resultDesc"></p>
 
         <div class="form-group" id="dataForm">
-          <h3>點選感興趣的產品，領取專屬處方箋</h3>
+          <h3>留下資訊，獲取專屬處方箋</h3>
+          <p id="countTip" style="color: #d9534f; text-align: center;">請至少挑選 3 個感興趣的產品 (0/3)</p>
+          
           <input type="text" id="userName" placeholder="您的姓名">
           <input type="text" id="userContact" placeholder="電話或 Line ID">
-          <button class="submit-btn" id="submitBtn" onclick="sendDataToGoogle()">送出資料</button>
-          <p id="statusMsg" style="text-align:center; margin-top:5px; font-size:0.8rem;"></p>
+          
+          <button class="submit-btn" id="submitBtn" onclick="sendDataToGoogle()" disabled>請先選足 3 個產品</button>
+          <p id="statusMsg" style="text-align:center; margin-top:8px; font-size:0.85rem;"></p>
         </div>
 
         <button class="restart-btn" onclick="restartQuiz()">重新測驗</button>
@@ -220,23 +203,23 @@
       const container = document.getElementById('imageContainer');
       container.innerHTML = '';
       selectedProducts = []; 
+      update防呆Status(); // 初始化按鈕狀態
 
       outcome.images.forEach((src, index) => {
         const img = document.createElement('img');
         img.src = src;
-        
-        // 💡 抓取自定義名稱
-        const currentName = outcome.productNames ? outcome.productNames[index] : `產品${index + 1}`;
-        img.dataset.productName = currentName; 
+        const pName = outcome.productNames ? outcome.productNames[index] : `產品${index + 1}`;
+        img.dataset.productName = pName;
         
         img.onclick = function() {
           this.classList.toggle('selected');
-          const pName = this.dataset.productName;
+          const name = this.dataset.productName;
           if (this.classList.contains('selected')) {
-            selectedProducts.push(pName);
+            selectedProducts.push(name);
           } else {
-            selectedProducts = selectedProducts.filter(name => name !== pName);
+            selectedProducts = selectedProducts.filter(n => n !== name);
           }
+          update防呆Status();
         };
         container.appendChild(img);
       });
@@ -244,13 +227,35 @@
       document.getElementById('result').classList.remove('hidden');
     }
 
+    function update防呆Status() {
+      const btn = document.getElementById('submitBtn');
+      const tip = document.getElementById('countTip');
+      const count = selectedProducts.length;
+
+      tip.innerText = `請至少挑選 3 個感興趣的產品 (${count}/3)`;
+      
+      if (count >= 3) {
+        btn.disabled = false;
+        btn.innerText = "送出資料";
+        btn.classList.add('ready');
+        tip.style.color = "#28a745"; // 綠色
+        tip.innerText = `已挑選 ${count} 個產品 ✅`;
+      } else {
+        btn.disabled = true;
+        btn.innerText = `還差 ${3 - count} 個產品`;
+        btn.classList.remove('ready');
+        tip.style.color = "#d9534f"; // 紅色
+      }
+    }
+
     function sendDataToGoogle() {
       const name = document.getElementById('userName').value;
       const contact = document.getElementById('userContact').value;
       if (!name || !contact) { alert("請填寫姓名與聯絡方式喔！"); return; }
 
-      document.getElementById('submitBtn').disabled = true;
-      document.getElementById('statusMsg').innerText = "傳送中...";
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = "傳送中...";
 
       fetch(API_URL, {
         method: 'POST',
@@ -264,7 +269,8 @@
         })
       }).then(() => {
         document.getElementById('statusMsg').innerText = "✓ 已成功送出！老師將會聯絡您。";
-        document.getElementById('submitBtn').style.display = "none";
+        btn.style.display = "none";
+        document.getElementById('countTip').style.display = "none";
       });
     }
 
@@ -272,11 +278,12 @@
       current = 0;
       initScores();
       selectedProducts = [];
+      document.getElementById('userName').value = "";
+      document.getElementById('userContact').value = "";
       document.getElementById('result').classList.add('hidden');
       document.getElementById('quizContent').classList.remove('hidden');
       document.getElementById('submitBtn').style.display = "block";
-      document.getElementById('submitBtn').disabled = false;
-      document.getElementById('statusMsg').innerText = "";
+      document.getElementById('countTip').style.display = "block";
       renderQuestion();
     }
 
