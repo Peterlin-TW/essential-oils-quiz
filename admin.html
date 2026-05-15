@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: 'Noto Sans TC', sans-serif; background: #f8f9fa; padding: 20px; color: #333; }
-    .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
     h1 { text-align: center; color: #5c4a3c; margin-bottom: 30px; }
     
     .controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; background: #fdf6f0; padding: 15px; border-radius: 12px; }
@@ -15,13 +15,27 @@
     button { background: #ff9a62; color: white; border: none; font-weight: bold; }
     button:hover { background: #ff8542; }
 
-    .chart-container { position: relative; margin: 40px auto; height: 350px; width: 350px; }
-    
-    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
     .stat-card { background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 15px; text-align: center; transition: transform 0.3s; }
-    .stat-card:hover { transform: translateY(-5px); border-color: #ff9a62; }
     .stat-card h3 { font-size: 0.9rem; color: #888; margin-bottom: 10px; }
     .stat-card p { font-size: 1.4rem; font-weight: bold; color: #ff9a62; line-height: 1.4; }
+
+    .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
+    @media (max-width: 768px) { .content-grid { grid-template-columns: 1fr; } }
+
+    .chart-container { position: relative; height: 300px; width: 100%; margin: auto; }
+
+    /* 表格樣式 */
+    .table-container { margin-top: 40px; overflow-x: auto; background: white; border-radius: 15px; border: 1px solid #eee; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th { background: #fdf6f0; color: #5c4a3c; padding: 15px; text-align: left; font-size: 0.9rem; border-bottom: 2px solid #ff9a62; }
+    td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+    tr:hover { background-color: #fff9f5; }
+    .tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
+    .tag-a { background: #ff9a62; color: white; }
+    .tag-b { background: #7d6b5d; color: white; }
+    .tag-c { background: #ffcc80; color: #333; }
+    .product-list { font-size: 0.85rem; color: #666; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -30,36 +44,56 @@
   <h1>精油測驗數據分析</h1>
 
   <div class="controls">
-    <label>時間過濾：</label>
+    <label>時間範圍：</label>
     <select id="dateFilter" onchange="fetchData()">
       <option value="all">所有資料</option>
       <option value="day">今日數據</option>
       <option value="week">最近 7 天</option>
       <option value="month">本月數據</option>
     </select>
-    <button onclick="fetchData()">手動整理數據</button>
+    <button onclick="fetchData()">手動更新數據</button>
   </div>
 
-  <div class="summary" id="summaryStats">
-    <div class="stat-card"><h3>總填答人數</h3><p id="totalCount">0</p></div>
+  <div class="summary">
+    <div class="stat-card"><h3>總填答人數</h3><p id="totalCount">0 人</p></div>
     <div class="stat-card"><h3>最受歡迎類型</h3><p id="topType">-</p></div>
     <div class="stat-card"><h3>熱門產品點擊</h3><p id="topProduct">-</p></div>
   </div>
 
-  <div class="chart-container">
-    <canvas id="resultChart"></canvas>
+  <div class="content-grid">
+    <div class="chart-container">
+      <canvas id="resultChart"></canvas>
+    </div>
+    <div>
+        <p style="color: #888; font-size: 0.9rem; line-height: 1.6;">💡 圓餅圖顯示了目前所有填答者的潛在需求比例，老師可以根據此數據準備對應類型的精油教材或贈品。</p>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <h2 style="padding: 20px; font-size: 1.2rem; color: #5c4a3c; border-bottom: 1px solid #eee;">最新填答名單</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>填寫時間</th>
+          <th>姓名</th>
+          <th>聯絡方式</th>
+          <th>測驗結果</th>
+          <th>感興趣的精油細項</th>
+        </tr>
+      </thead>
+      <tbody id="memberTable">
+        </tbody>
+    </table>
   </div>
 </div>
 
 <script>
-  // 💡 請確保此網址正確
   const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec?type=admin";
 
-  // 💡 定義類型代號與顯示標題的對照表
   const typeMap = {
-    'TypeA': '舒壓放鬆',
-    'TypeB': '能量扎根',
-    'TypeC': '動力喚醒'
+    'TypeA': { name: '舒壓放鬆', class: 'tag-a' },
+    'TypeB': { name: '能量扎根', class: 'tag-b' },
+    'TypeC': { name: '動力喚醒', class: 'tag-c' }
   };
 
   let myChart = null;
@@ -70,8 +104,7 @@
       const data = await response.json();
       processAndDisplay(data);
     } catch (err) {
-      console.error(err);
-      alert("數據載入失敗，請確認 Apps Script 部署網址。");
+      alert("載入失敗，請確認 API 設定。");
     }
   }
 
@@ -79,7 +112,7 @@
     const filter = document.getElementById('dateFilter').value;
     const now = new Date();
     
-    // 過濾時間
+    // 過濾資料
     const filtered = data.filter(item => {
       if (filter === 'all') return true;
       const d = new Date(item.date);
@@ -87,30 +120,42 @@
       if (filter === 'week') return (now - d) / (1000 * 60 * 60 * 24) <= 7;
       if (filter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       return true;
-    });
+    }).reverse(); // 最新的排在前面
 
-    // 統計數據
     const typeCounts = { 'TypeA': 0, 'TypeB': 0, 'TypeC': 0 };
     const productCounts = {};
+    const tableBody = document.getElementById('memberTable');
+    tableBody.innerHTML = '';
 
     filtered.forEach(item => {
-      if (typeCounts.hasOwnProperty(item.resultType)) {
-        typeCounts[item.resultType]++;
-      }
+      // 統計圖表數據
+      if (typeCounts.hasOwnProperty(item.resultType)) typeCounts[item.resultType]++;
       
+      // 統計產品點擊
       if (item.selectedProducts) {
         item.selectedProducts.split(', ').forEach(p => {
           if (p && p !== "無") productCounts[p] = (productCounts[p] || 0) + 1;
         });
       }
+
+      // 💡 渲染表格列
+      const typeInfo = typeMap[item.resultType] || { name: item.resultType, class: '' };
+      const row = `
+        <tr>
+          <td style="color:#888; font-size:0.8rem;">${new Date(item.date).toLocaleString('zh-TW')}</td>
+          <td><strong>${item.name}</strong></td>
+          <td>${item.contact}</td>
+          <td><span class="tag ${typeInfo.class}">${typeInfo.name}</span></td>
+          <td class="product-list">${item.selectedProducts || '未選擇'}</td>
+        </tr>
+      `;
+      tableBody.innerHTML += row;
     });
 
-    // 更新資訊卡
+    // 更新統計數值
     document.getElementById('totalCount').innerText = filtered.length + " 人";
-    
-    // 💡 找出最大值並轉換為中文標題
     const topTypeCode = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
-    document.getElementById('topType').innerText = filtered.length > 0 ? (typeMap[topTypeCode] || topTypeCode) : "-";
+    document.getElementById('topType').innerText = filtered.length > 0 ? (typeMap[topTypeCode] ? typeMap[topTypeCode].name : topTypeCode) : "-";
     
     const productKeys = Object.keys(productCounts);
     const topP = productKeys.length > 0 ? productKeys.reduce((a, b) => productCounts[a] > productCounts[b] ? a : b) : "無";
@@ -122,26 +167,20 @@
   function updateChart(counts) {
     const ctx = document.getElementById('resultChart').getContext('2d');
     if (myChart) myChart.destroy();
-
     myChart = new Chart(ctx, {
       type: 'pie',
       data: {
-        // 💡 圓餅圖標籤也使用中文
-        labels: Object.values(typeMap),
+        labels: ['舒壓放鬆', '能量扎根', '動力喚醒'],
         datasets: [{
           data: [counts.TypeA, counts.TypeB, counts.TypeC],
           backgroundColor: ['#ff9a62', '#7d6b5d', '#ffcc80'],
-          hoverOffset: 10,
-          borderWidth: 2,
-          borderColor: '#ffffff'
+          borderWidth: 0
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'bottom', labels: { padding: 20, font: { size: 14 } } }
-        }
+        plugins: { legend: { position: 'bottom' } }
       }
     });
   }
