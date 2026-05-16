@@ -3,219 +3,163 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>專屬香氣覺察：課前身心狀態問卷</title>
+  <title>專屬香氣覺察問卷</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* 保留原有的美觀樣式 */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
     body { background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%); min-height: 100vh; color: #3b2f2f; }
-    .hero { position: relative; height: 220px; background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop'); background-size: cover; background-position: center; display: flex; align-items: end; padding: 24px; }
-    .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); }
-    .hero-content { position: relative; z-index: 2; color: white; }
-    .container { max-width: 500px; margin: -30px auto 40px; position: relative; z-index: 5; padding: 0 16px; }
-    .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 28px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .hero { height: 200px; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop') center/cover; display: flex; align-items: flex-end; padding: 20px; position: relative; }
+    .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), transparent); }
+    .hero h1 { color: white; z-index: 2; font-size: 1.5rem; }
+    .container { max-width: 500px; margin: -30px auto 40px; padding: 0 15px; position: relative; z-index: 5; }
+    .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
     
-    /* 表單元件樣式 */
-    .form-section h3 { font-size: 1.1rem; color: #5c4a3c; margin-bottom: 18px; border-left: 4px solid #ff9a62; padding-left: 10px; }
-    .input-label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; color: #7d6b5d; }
-    input[type="text"], input[type="email"], select, textarea { 
-      width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 12px; outline: none; font-size: 1rem;
-    }
-    textarea { height: 80px; resize: none; }
+    h3 { margin-bottom: 20px; color: #5c4a3c; font-size: 1.1rem; border-left: 4px solid #ff9a62; padding-left: 10px; }
+    label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #7d6b5d; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; }
+    textarea { height: 80px; }
     
-    .next-btn, .submit-btn { 
-      width: 100%; padding: 15px; border-radius: 14px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
-    }
-    
-    .question-image { width: 100%; height: 180px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; }
-    .answer-btn { width: 100%; border: none; background: white; border-radius: 14px; padding: 16px; text-align: left; margin-bottom: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.2s; }
-    .answer-btn:hover { background: #fff3eb; }
+    .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .btn:hover { background: #5c4a3c; }
+
+    .question-image { width: 100%; height: 180px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
+    .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 10px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
+    .ans-btn:hover { background: #fff3eb; }
 
     .hidden { display: none !important; }
     .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
-    .progress { height: 100%; width: 0; background: #ff9a62; transition: width 0.4s; }
-    .result-img-grid { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
-    .result-img-grid img { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 3px solid #fff; }
+    .progress { height: 100%; width: 0; background: #ff9a62; transition: 0.4s; }
+    .result-imgs { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+    .result-imgs img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
 
-  <section class="hero"><div class="hero-content"><h1>香氣覺察體驗</h1><p>尋找您的身心命定配比</p></div></section>
+<section class="hero"><h1>專屬香氣覺察問卷</h1></section>
 
-  <div class="container">
-    <div class="card">
-      
-      <div id="step1" class="form-section">
-        <h3>第一部分：基本資料</h3>
-        <label class="input-label">您的姓名</label>
-        <input type="text" id="userName" placeholder="請輸入姓名">
-        
-        <label class="input-label">E-mail</label>
-        <input type="email" id="userEmail" placeholder="example@mail.com">
-
-        <label class="input-label">性別</label>
-        <select id="userGender">
-          <option value="女">女</option>
-          <option value="男">男</option>
-          <option value="其他">其他 / 不願透露</option>
-        </select>
-
-        <label class="input-label">年齡區間</label>
-        <select id="userAge">
-          <option value="21-30">21-30歲</option>
-          <option value="31-40">31-40歲</option>
-          <option value="41-50">41-50歲</option>
-          <option value="51+">51歲以上</option>
-        </select>
-
-        <label class="input-label">職業類型 (職場模式會影響身心需求)</label>
-        <input type="text" id="userJob" placeholder="例如：上班族、自由工作者...">
-
-        <label class="input-label">目前居住地</label>
-        <select id="userLocation">
-          <option value="北部">北部地區</option>
-          <option value="中部">中部地區</option>
-          <option value="南部">南部地區</option>
-          <option value="東部">東部地區</option>
-          <option value="海外/其他">海外/其他</option>
-        </select>
-
-        <button class="next-btn" onclick="goToStep2()">下一步：香氣記憶與掃描</button>
-      </div>
-
-      <div id="step2" class="form-section hidden">
-        <h3>第二部分：身心掃描</h3>
-        <label class="input-label">關於氣味的情感記憶 (例如：下雨的味道)</label>
-        <textarea id="smellMemory" placeholder="是否有某種味道會讓您聯想到特定的回憶？"></textarea>
-        
-        <label class="input-label">對目前的壓力指數評分 (1最輕-10最重)</label>
-        <select id="stressLevel">
-          <option value="1">1 - 極度放鬆</option>
-          <option value="3">3 - 輕微壓力</option>
-          <option value="5">5 - 普通忙碌</option>
-          <option value="8">8 - 高度緊繃</option>
-          <option value="10">10 - 徹底耗竭</option>
-        </select>
-
-        <button class="next-btn" onclick="startQuiz()">開始香氣覺察測驗</button>
-      </div>
-
-      <div id="quizContent" class="hidden">
-        <div class="progress-bar"><div class="progress" id="progress"></div></div>
-        <img id="qImage" class="question-image" src="">
-        <div id="question" class="question" style="font-weight: 700; margin-bottom: 20px;"></div>
-        <div id="answers" class="answers"></div>
-      </div>
-
-      <div id="result" class="hidden">
-        <h2 id="resultTitle" style="text-align:center; color:#5c4a3c; margin-bottom:15px;"></h2>
-        <div id="imageContainer" class="result-img-grid"></div>
-        <p id="resultDesc" style="line-height:1.7; color:#666; margin-bottom:20px;"></p>
-        <div class="form-group" style="padding:20px; background:rgba(255,154,98,0.1); border-radius:20px;">
-          <input type="text" id="userLine" placeholder="請輸入 Line ID 以便接收診斷">
-          <button id="submitBtn" class="submit-btn" onclick="finalSubmit()">送出問卷並獲取專屬建議</button>
-          <p id="statusMsg" style="text-align:center; margin-top:10px; font-size:0.85rem; color:#7d6b5d;"></p>
-        </div>
-      </div>
-
+<div class="container">
+  <div class="card">
+    
+    <div id="step1">
+      <h3>【第一部分】基本資料</h3>
+      <label>姓名</label><input type="text" id="name">
+      <label>E-mail</label><input type="email" id="email">
+      <label>性別</label>
+      <select id="gender"><option value="女">女</option><option value="男">男</option><option value="其他">其他</option></select>
+      <label>年齡區間</label>
+      <select id="age">
+        <option value="20以下">20歲以下</option><option value="21-30">21-30歲</option><option value="31-40">31-40歲</option>
+        <option value="41-50">41-50歲</option><option value="51-60">51-60歲</option><option value="60+">60歲以上</option>
+      </select>
+      <label>職業類型</label><input type="text" id="job" placeholder="例如：上班族、自由工作者">
+      <label>目前居住地</label>
+      <select id="location"><option value="北部">北部</option><option value="中部">中部</option><option value="南部">南部</option><option value="東部">東部</option><option value="海外">海外</option></select>
+      <button class="btn" onclick="toStep2()">下一步：生活軌跡</button>
     </div>
+
+    <div id="step2" class="hidden">
+      <h3>【第二部分】生活軌跡</h3>
+      <label>氣味的情感記憶 (例如：下雨的味道)</label>
+      <textarea id="smellMemory"></textarea>
+      <label>目前的壓力指數 (1放鬆 - 10耗竭)</label>
+      <select id="stressLevel">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option>
+        <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+      </select>
+      <button class="btn" onclick="startQuiz()">開始香氣覺察測驗</button>
+    </div>
+
+    <div id="quiz" class="hidden">
+      <div class="progress-bar"><div class="progress" id="progress"></div></div>
+      <img id="qImg" class="question-image" src="">
+      <div id="qText" class="question" style="font-weight: bold; margin-bottom: 20px;"></div>
+      <div id="ansList"></div>
+    </div>
+
+    <div id="result" class="hidden" style="text-align: center;">
+      <h2 id="resTitle" style="color: #5c4a3c; margin-bottom: 15px;"></h2>
+      <div id="resImgs" class="result-imgs"></div>
+      <p id="resDesc" style="font-size: 0.9rem; line-height: 1.6; color: #666; margin-bottom: 20px; text-align: justify;"></p>
+      <button id="finalBtn" class="btn" onclick="submitAll()">送出問卷並領取配方建議</button>
+      <p id="status" style="margin-top: 15px; font-size: 0.8rem; color: #ff9a62;"></p>
+    </div>
+
   </div>
+</div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
-    const resultOutcomes = {
-      TypeA: { title: '黃金能量香水', names: '檀香、葡萄柚、依蘭', images: ['...'], desc: '...' },
-      TypeB: { title: '幸福光芒香水', names: '...', images: ['...'], desc: '...' },
-      TypeC: { title: '沉靜心流香水', names: '...', images: ['...'], desc: '...' },
-      TypeD: { title: '自信綻放香水', names: '...', images: ['...'], desc: '...' }
-    };
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
+const resultOutcomes = {
+  TypeA: { title: '黃金能量香水', names: '檀香、葡萄柚、依蘭', imgs: ['https://images.unsplash.com/photo-1612217433315-0624637d320c?w=100','https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=100','https://images.unsplash.com/photo-1596003906949-67221c37965c?w=100'], desc: '您現在需要的是「提振」與「找回力量」。檀香穩定氣場，葡萄柚掃除腦中陰霾，重拾行動力。' },
+  TypeB: { title: '幸福光芒香水', names: '柳橙、薰衣草、玫瑰、廣藿香', imgs: ['https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=100','https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=100','https://images.unsplash.com/photo-1559563458-527698bf5295?w=100','https://images.unsplash.com/photo-1595981267035-7b04ca84a82d?w=100'], desc: '心靈渴望被溫柔接住。玫瑰帶來愉悅感，薰衣草安撫敏感神經，讓您感受到溫暖包覆。' },
+  TypeC: { title: '沉靜心流香水', names: '佛手柑、真正薰衣草、雪松', imgs: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=100','https://images.unsplash.com/photo-1595928642581-f50f4f3453a5?w=100','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=100'], desc: '您需要「卸下重擔」與「歸零」。佛手柑疏通鬱結，雪松帶來森林氣息，放鬆深層壓力。' },
+  TypeD: { title: '自信綻放香水', names: '佛手柑、花梨木、雪松', imgs: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=100','https://images.unsplash.com/photo-1602928321679-560bb453f190?w=100','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=100'], desc: '您需要清晰的表達力與勇氣。花梨木穩定思緒，雪松帶來堅定底氣，讓您自信面對挑戰。' }
+};
 
-    let questions = [];
-    let current = 0;
-    let scores = { TypeA: 0, TypeB: 0, TypeC: 0, TypeD: 0 };
-    let userData = {};
+let questions = [], current = 0, scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0}, mainData = {};
 
-    function goToStep2() {
-      userData.name = document.getElementById('userName').value;
-      userData.email = document.getElementById('userEmail').value;
-      userData.gender = document.getElementById('userGender').value;
-      userData.age = document.getElementById('userAge').value;
-      userData.job = document.getElementById('userJob').value;
-      userData.location = document.getElementById('userLocation').value;
-      
-      if(!userData.name) return alert("請填寫姓名");
-      document.getElementById('step1').classList.add('hidden');
-      document.getElementById('step2').classList.remove('hidden');
-    }
+function toStep2() {
+  mainData.name = document.getElementById('name').value;
+  mainData.email = document.getElementById('email').value;
+  if(!mainData.name) return alert("請填寫姓名");
+  mainData.gender = document.getElementById('gender').value;
+  mainData.age = document.getElementById('age').value;
+  mainData.job = document.getElementById('job').value;
+  mainData.location = document.getElementById('location').value;
+  document.getElementById('step1').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+}
 
-    async function startQuiz() {
-      userData.smellMemory = document.getElementById('smellMemory').value;
-      userData.stressLevel = document.getElementById('stressLevel').value;
-      
-      document.getElementById('step2').classList.add('hidden');
-      document.getElementById('quizContent').classList.remove('hidden');
-      
-      // 抓取題目邏輯 (同之前)
-      const res = await fetch(API_URL);
-      questions = await res.json();
-      renderQuestion();
-    }
+async function startQuiz() {
+  mainData.smellMemory = document.getElementById('smellMemory').value;
+  mainData.stressLevel = document.getElementById('stressLevel').value;
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  const res = await fetch(API_URL);
+  questions = await res.json();
+  renderQ();
+}
 
-    function renderQuestion() {
-      const q = questions[current];
-      document.getElementById('question').innerText = q.q;
-      document.getElementById('qImage').src = q.image;
-      document.getElementById('qImage').style.display = q.image ? 'block' : 'none';
-      const ansDiv = document.getElementById('answers');
-      ansDiv.innerHTML = '';
-      q.answers.forEach(a => {
-        const btn = document.createElement('button');
-        btn.className = 'answer-btn';
-        btn.innerText = a.text;
-        btn.onclick = () => {
-          scores[a.value]++;
-          current++;
-          if(current < questions.length) renderQuestion(); else showResult();
-        };
-        ansDiv.appendChild(btn);
-      });
-      document.getElementById('progress').style.width = ((current+1)/questions.length*100)+'%';
-    }
+function renderQ() {
+  const q = questions[current];
+  document.getElementById('qImg').src = q.image;
+  document.getElementById('qImg').style.display = q.image ? 'block' : 'none';
+  document.getElementById('qText').innerText = q.q;
+  const list = document.getElementById('ansList');
+  list.innerHTML = '';
+  q.answers.forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'ans-btn';
+    b.innerText = a.text;
+    b.onclick = () => { scores[a.value]++; current++; if(current<questions.length) renderQ(); else showRes(); };
+    list.appendChild(b);
+  });
+  document.getElementById('progress').style.width = ((current+1)/questions.length*100)+'%';
+}
 
-    function showResult() {
-      document.getElementById('quizContent').classList.add('hidden');
-      const finalKey = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-      const res = resultOutcomes[finalKey];
-      document.getElementById('resultTitle').innerText = res.title;
-      document.getElementById('resultDesc').innerText = res.desc;
-      // ... 渲染圖片邏輯
-      document.getElementById('result').classList.remove('hidden');
-      userData.finalKey = finalKey;
-    }
+function showRes() {
+  document.getElementById('quiz').classList.add('hidden');
+  const final = Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
+  mainData.resultType = final;
+  const res = resultOutcomes[final];
+  document.getElementById('resTitle').innerText = res.title;
+  document.getElementById('resDesc').innerText = res.desc;
+  const imgs = document.getElementById('resImgs');
+  imgs.innerHTML = '';
+  res.imgs.forEach(s => { const i = document.createElement('img'); i.src = s; imgs.appendChild(i); });
+  document.getElementById('result').classList.remove('hidden');
+}
 
-    function finalSubmit() {
-      const line = document.getElementById('userLine').value;
-      if(!line) return alert("請填寫 Line ID");
-      
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
-      btn.innerText = "傳送中...";
-      
-      fetch(API_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({
-          ...userData,
-          line: line,
-          resultTitle: resultOutcomes[userData.finalKey].title
-        })
-      }).then(() => {
-        document.getElementById('statusMsg').innerText = "問卷已送出，謝謝您的參與！";
-        btn.style.display = 'none';
-      });
-    }
-
-    window.onload = () => { /* 預載題目邏輯 */ };
-  </script>
+async function submitAll() {
+  const btn = document.getElementById('finalBtn');
+  btn.disabled = true; btn.innerText = "傳送中...";
+  const outcome = resultOutcomes[mainData.resultType];
+  const payload = { ...mainData, resultTitle: outcome.title, selectedProducts: outcome.names };
+  
+  await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+  document.getElementById('status').innerText = "✓ 送出成功！老師將會儘快聯繫您。";
+  btn.style.display = 'none';
+}
+</script>
 </body>
 </html>

@@ -2,142 +2,58 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>芳療後台 - 數據分析</title>
+  <title>芳療諮詢後台</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { background: #f8f9fa; font-family: 'Noto Sans TC', sans-serif; padding: 20px; color: #444; }
-    .container { max-width: 1100px; margin: 0 auto; }
-    .card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    h1 { text-align: center; color: #5c4a3c; margin-bottom: 30px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #fcfcfc; color: #888; font-weight: 500; font-size: 0.9rem; }
-    .tag { padding: 4px 12px; border-radius: 8px; font-size: 0.85rem; color: white; font-weight: bold; }
-    .tag-a { background: #ff9a62; } /* 黃金能量 */
-    .tag-b { background: #e5989b; } /* 幸福光芒 */
-    .tag-c { background: #829ab1; } /* 沉靜心流 */
-    .tag-d { background: #b19cd9; } /* 自信綻放 */
-    .count-badge { background: #fff3eb; color: #ff9a62; padding: 2px 10px; border-radius: 6px; font-weight: bold; }
-    .loading-text { text-align: center; padding: 50px; color: #888; }
+    body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+    .card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+    .tag { padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; color: white; }
+    .TypeA { background: #ff9a62; } .TypeB { background: #e5989b; } .TypeC { background: #829ab1; } .TypeD { background: #b19cd9; }
   </style>
 </head>
 <body>
-
-<div class="container">
-  <h1>芳香覺察問卷後台</h1>
-  
-  <div id="loading" class="loading-text">正在讀取最新數據...</div>
-
-  <div id="mainContent" class="hidden" style="display:none;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-      <div class="card">
-        <h3>身心類型佔比</h3>
-        <canvas id="typeChart"></canvas>
-      </div>
-      <div class="card">
-        <h3>精油備貨合計表</h3>
-        <table id="stockTable">
-          <thead><tr><th>精油名稱</th><th>需求次數</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>詳細填答名單</h3>
-      <table id="memberTable">
-        <thead><tr><th>時間 / 姓名</th><th>結果類型</th><th>建議配方內容</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
+  <h1>芳療問卷數據總覽</h1>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="card"><canvas id="pieChart"></canvas></div>
+    <div class="card"><h3>精油備貨統計</h3><div id="stockList"></div></div>
   </div>
-</div>
+  <div class="card">
+    <h3>完整客戶名單</h3>
+    <table>
+      <thead><tr><th>時間</th><th>姓名</th><th>年齡/職業</th><th>壓力</th><th>測驗結果</th><th>情感記憶</th></tr></thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
 
 <script>
-  // 💡 請確保這裡的網址後面有 ?type=admin
   const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec?type=admin";
-
-  const typeMap = {
-    'TypeA': { name: '黃金能量', class: 'tag-a' },
-    'TypeB': { name: '幸福光芒', class: 'tag-b' },
-    'TypeC': { name: '沉靜心流', class: 'tag-c' },
-    'TypeD': { name: '自信綻放', class: 'tag-d' }
-  };
-
-  async function loadData() {
-    try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      
-      render(data.reverse());
-    } catch (e) {
-      document.getElementById('loading').innerText = "讀取失敗，請確認 API 網址與權限。";
-    }
-  }
-
-  function render(data) {
-    const typeCounts = { TypeA: 0, TypeB: 0, TypeC: 0, TypeD: 0 };
-    const stockCounts = {};
-    const memberBody = document.querySelector('#memberTable tbody');
-    const stockBody = document.querySelector('#stockTable tbody');
-
-    memberBody.innerHTML = '';
-    stockBody.innerHTML = '';
-
-    data.forEach(item => {
-      // 統計結果類型
-      if (typeCounts.hasOwnProperty(item.resultType)) {
-        typeCounts[item.resultType]++;
-      }
-
-      // 統計精油 (以「、」或「, 」分割)
-      if (item.selectedProducts) {
-        const oils = item.selectedProducts.split(/[、,]/);
-        oils.forEach(o => {
-          const name = o.trim();
-          if (name) stockCounts[name] = (stockCounts[name] || 0) + 1;
-        });
-      }
-
-      // 渲染清單
-      const info = typeMap[item.resultType] || { name: item.resultType, class: '' };
-      memberBody.innerHTML += `
-        <tr>
-          <td><small>${item.date || ''}</small><br><b>${item.name}</b><br><small>${item.contact}</small></td>
-          <td><span class="tag ${info.class}">${info.name}</span></td>
-          <td style="font-size: 0.9rem; color: #666;">${item.selectedProducts || '無'}</td>
-        </tr>
-      `;
+  
+  async function load() {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    const typeCount = {TypeA:0, TypeB:0, TypeC:0, TypeD:0};
+    const list = document.getElementById('list');
+    
+    data.reverse().forEach(d => {
+      typeCount[d.resultType]++;
+      list.innerHTML += `<tr>
+        <td>${d.date.split(' ')[0]}</td>
+        <td><b>${d.name}</b><br>${d.contact || ''}</td>
+        <td>${d.age} / ${d.job}</td>
+        <td>🔥 ${d.stressLevel || d.stressLevel}</td>
+        <td><span class="tag ${d.resultType}">${d.resultTitle}</span></td>
+        <td style="font-size:0.8rem; color:#666;">${d.smellMemory || '-'}</td>
+      </tr>`;
     });
 
-    // 渲染精油合計表 (由多到少排序)
-    Object.entries(stockCounts).sort((a, b) => b[1] - a[1]).forEach(([name, count]) => {
-      stockBody.innerHTML += `<tr><td>${name}</td><td><span class="count-badge">${count} 份</span></td></tr>`;
-    });
-
-    // 渲染圓餅圖
-    new Chart(document.getElementById('typeChart'), {
+    new Chart(document.getElementById('pieChart'), {
       type: 'pie',
-      data: {
-        labels: ['黃金能量', '幸福光芒', '沉靜心流', '自信綻放'],
-        datasets: [{
-          data: [typeCounts.TypeA, typeCounts.TypeB, typeCounts.TypeC, typeCounts.TypeD],
-          backgroundColor: ['#ff9a62', '#e5989b', '#ffcc80', '#b19cd9'],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        plugins: { legend: { position: 'bottom' } }
-      }
+      data: { labels: ['能量', '幸福', '沉靜', '自信'], datasets: [{ data: Object.values(typeCount), backgroundColor: ['#ff9a62', '#e5989b', '#829ab1', '#b19cd9'] }] }
     });
   }
-
-  window.onload = loadData;
+  load();
 </script>
-
 </body>
 </html>
