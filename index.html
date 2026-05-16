@@ -16,11 +16,11 @@
     html { font-size: 16px; }
     body { background: linear-gradient(180deg, var(--bg-light) 0%, #e9d9c6 100%); min-height: 100vh; color: var(--main-brown); line-height: 1.6; overflow-x: hidden; }
     
-    /* 歡迎畫面樣式 */
+    /* 歡迎畫面 */
     #welcomeScreen { 
       height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; 
       text-align: center; padding: 0 30px; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600') center/cover;
-      position: relative; color: white;
+      position: relative; color: white; transition: 0.5s;
     }
     #welcomeScreen::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 1; }
     #welcomeScreen .content { z-index: 2; animation: fadeIn 1.5s ease; }
@@ -34,14 +34,14 @@
     .container { max-width: 500px; margin: 15px auto 40px; padding: 0 12px; position: relative; z-index: 5; }
     .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 25px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
     
-    /* 精油滴落動畫 */
     .loading-state { text-align: center; padding: 60px 0; }
     .oil-drop { width: 12px; height: 12px; background: var(--accent-orange); border-radius: 50% 0 50% 50%; transform: rotate(45deg); margin: 0 auto 20px; animation: drip 1.5s infinite; }
     @keyframes drip { 0% { transform: translateY(-20px) rotate(45deg); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(40px) rotate(45deg); opacity: 0; } }
     
     .btn { padding: 16px 30px; border-radius: 14px; border: none; background: var(--main-brown); color: white; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; width: 100%; text-decoration: none; }
     #welcomeScreen .btn { background: var(--accent-orange); width: auto; box-shadow: 0 4px 15px rgba(255,154,98,0.4); }
-    
+    #welcomeScreen .btn:disabled { background: #999; box-shadow: none; cursor: wait; }
+
     .btn-group { display: flex; gap: 10px; margin-top: 10px; }
     .btn-back { flex: 1; background: #e0d5c8; color: #7d6b5d; font-size: 1rem; }
     .btn-line { background: #06C755; color: white; margin-top: 15px; display: none; }
@@ -66,7 +66,7 @@
   <div class="content">
     <h1>香氣覺察之旅</h1>
     <p>深呼吸，放下繁忙的思緒<br>讓我們透過直覺，為此刻的自己<br>尋找一份專屬的植物能量。</p>
-    <button class="btn" onclick="startLoading()">開啟覺察測驗</button>
+    <button id="startBtn" class="btn" onclick="goToStep1()">開啟覺察測驗</button>
   </div>
 </div>
 
@@ -127,29 +127,52 @@ const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBe
 const resultOutcomes = {
   TypeA: { title: '黃金能量香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxH6FgMFwmSUf8TwOPG5_w6QOi53dnsZegLIYDVugeMzsFG9swKj96Z6yw36b4sSjlwgtFXUIbYchBCcZd-a2AD-xC6MjId5Y_Dn3vz8vCm6hVzwo9KjR5S6Bx9nbqH1OZBDgAfgoSidMLq8y4GRQErJ2w9SMsCpTr0RvUs4ZlyQH7lL2BESz0cmN1g8E/s16000/A.jpg', desc: '您現在需要提振力量，找回行動力。', names: '檀香、葡萄柚、依蘭' },
   TypeB: { title: '幸福光芒香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoABGAalgjPp8TMpg5xYV_RR7mW2oLFnhQRzSaGsgHvL6wNActs7OeUTo0icf2T0YOUnC2TAxdCau8u05AjVIksH2n9xyoWcXY7qoJz1pvhqCUA5ZmOPalQs2tISAsil-9haPTpmWjj6KhRr6BZPVQCclvq2ro6fmg-8Cbpwy0WrUvYJazo1kkrhUIqyA/s16000/B.jpg', desc: '心靈渴望被溫柔接住，感受到包覆感。', names: '柳橙、薰衣草、玫瑰' },
-  TypeC: { title: '沉靜心流香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSOcFAl_QnInsDOd_AFcpmm_gV3uHHFpMDWDSAw-CZym6c4k18TuVUmf3u2nv8JrFhdklsKDhUzreyKOuT4AVljcKarKU5AHy8SkUHG_OLYfirqIPKkYZTRBxLfyLCCt8bDNyNp9EJQ6cSYgqucZMjrMtmezzYSo5ZoUM1Jr7FNhLyFgkIugN-4OB2uqk/s16000/C.jpg', desc: '您需要卸下重單與歸零，進入放鬆狀態。', names: '佛手柑、真正薰衣草、雪松' },
+  TypeC: { title: '沉靜心流香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSOcFAl_QnInsDOd_AFcpmm_gV3uHHFpMDWDSAw-CZym6c4k18TuVUmf3u2nv8JrFhdklsKDhUzreyKOuT4AVljcKarKU5AHy8SkUHG_OLYfirqIPKkYZTRBxLfyLCCt8bDNyNp9EJQ6cSYgqucZMjrMtmezzYSo5ZoUM1Jr7FNhLyFgkIugN-4OB2uqk/s16000/C.jpg', desc: '您需要卸下重擔與歸零，進入放鬆狀態。', names: '佛手柑、真正薰衣草、雪松' },
   TypeD: { title: '自信綻放香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfcQse_eoj3HgXioYyjqPI_D6nQm3Z1svoyRPxYRcKof9Eth3T6tEovh_GjsmNLYatz4dGxsqn9YXlGmydUYfL7_6SoX3MNvLfsghmqOOgMxal36b8uAdkG3dZvlpxA7i4YVFg91PAiCmHL_jfPS0fMGmd00LTbz2B4vGglCN1RtkKJP8sEFINwpLIsp0/s16000/D.jpg', desc: '您需要清晰的表達力與穩定的自信。', names: '花梨木、雪松' }
 };
 
-let questions = [], current = 0, scoresHistory = [], scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0}, mainData = {};
+let questions = [], current = 0, scoresHistory = [], scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0}, mainData = {}, isDataReady = false;
 
-function startLoading() {
-  document.getElementById('welcomeScreen').classList.add('hidden');
-  document.getElementById('mainApp').classList.remove('hidden');
-  init(); // 點擊後才開始連線抓題目
-}
-
-async function init() {
+// 💡 核心優化：網頁一打開就偷偷開始讀資料
+async function preloadData() {
   try {
     const res = await fetch(API_URL);
     questions = await res.json();
-    if(questions.length > 0) { 
-      document.getElementById('loadingState').classList.add('hidden'); 
-      document.getElementById('step1').classList.remove('hidden'); 
+    if(questions.length > 0) {
+      isDataReady = true; // 資料準備好了
+      console.log("資料預載完成");
     }
-  } catch (e) { document.getElementById('loadingMsg').innerText = "連線失敗，請重新整理"; }
+  } catch (e) { console.error("預載失敗", e); }
 }
 
+// 點擊歡迎按鈕後的邏輯
+function goToStep1() {
+  document.getElementById('welcomeScreen').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('welcomeScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    
+    if (isDataReady) {
+      // 如果資料已經偷偷讀完了，直接顯示 Step 1
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+    } else {
+      // 如果網路太慢還沒讀完，就讓學員看一會兒滴油動畫
+      checkDataStatus();
+    }
+  }, 500);
+}
+
+function checkDataStatus() {
+  if (isDataReady) {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+  } else {
+    setTimeout(checkDataStatus, 500); // 每 0.5 秒檢查一次
+  }
+}
+
+// 其餘邏輯保持不變
 function backToStep1() { document.getElementById('step2').classList.add('hidden'); document.getElementById('step1').classList.remove('hidden'); }
 function toStep2() { 
   mainData.name = document.getElementById('name').value; 
@@ -199,6 +222,9 @@ async function submitAll() {
   document.getElementById('status').innerText = "✓ 資料已送出！歡迎加入社群：";
   document.getElementById('lineCommunityBtn').style.display = 'flex';
 }
+
+// 💡 網頁啟動時立即預載
+window.onload = preloadData;
 </script>
 </body>
 </html>
