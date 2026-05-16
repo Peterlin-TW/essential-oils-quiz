@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>專屬香氣覺察問卷</title>
-
-<meta property="og:title" content="專屬香氣覺察：尋找您的命定配方" />
-<meta property="og:description" content="只需一分鐘，透過直覺選出最適合您此刻身心狀態的專屬香氣。" />
-<meta property="og:image" content="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800" />
-<meta property="og:type" content="website" />
   
+  <meta property="og:title" content="專屬香氣覺察：尋找您的命定配方" />
+  <meta property="og:description" content="只需一分鐘，透過直覺選出最適合您此刻身心狀態的專屬香氣。" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800" />
+  <meta property="og:type" content="website" />
+
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
@@ -27,7 +27,7 @@
     input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; }
     .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
     .question-image { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; display: none; }
-    .result-main-img { width: calc(100% + 10px); margin-left: -5px; height: auto; display: none; border-radius: 15px; margin-bottom: 20px; }
+    .result-main-img { width: calc(100% + 10px); margin-left: -5px; height: auto; display: none; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 10px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
     .hidden { display: none !important; }
     .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
@@ -51,18 +51,18 @@
       <label>E-mail</label><input type="email" id="email">
       <label>性別</label><select id="gender"><option value="女">女</option><option value="男">男</option><option value="其他">其他</option></select>
       <label>年齡區間</label>
-      <select id="age"><option value="20以下">20歲以下</option><option value="21-30">21-30歲</option><option value="31-40">31-40歲</option><option value="41-50">41-50歲</option><option value="51-60">51-60歲</option><option value="60+">60歲以上</option></select>
+      <select id="age"><option value="21-30">21-30歲</option><option value="31-40">31-40歲</option><option value="41-50">41-50歲</option><option value="51+">51歲以上</option></select>
       <label>職業類型</label><input type="text" id="job">
-      <label>目前居住地</label><select id="location"><option value="北部">北部</option><option value="中部">中部</option><option value="南部">南部</option><option value="東部">東部</option><option value="海外">海外</option></select>
+      <label>目前居住地</label><select id="location"><option value="北部">北部</option><option value="中部">中部</option><option value="南部">南部</option><option value="東部">東部</option></select>
       <button class="btn" onclick="toStep2()">下一步：身心掃描</button>
     </div>
 
     <div id="step2" class="hidden">
       <h3>【第二部分】身心掃描</h3>
-      <label>氣味的情感記憶</label><textarea id="smellMemory"></textarea>
-      <label>目前的壓力指數 (1-10)</label>
+      <label>氣味的情感記憶</label><textarea id="smellMemory" placeholder="是否有味道會讓您聯想到特定回憶？"></textarea>
+      <label>壓力指數 (1放鬆 - 10緊繃)</label>
       <select id="stressLevel"><option value="1">1</option><option value="5" selected>5</option><option value="10">10</option></select>
-      <label>目前的疲憊指數 (1-10)</label>
+      <label>疲憊指數 (1精神好 - 10筋疲力盡)</label>
       <select id="tiredLevel"><option value="1">1</option><option value="5" selected>5</option><option value="10">10</option></select>
       <button class="btn" onclick="startQuiz()">進入香氣覺察測驗</button>
     </div>
@@ -86,28 +86,19 @@
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
+
 const resultOutcomes = {
-  TypeA: { title: '黃金能量香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxH6FgMFwmSUf8TwOPG5_w6QOi53dnsZegLIYDVugeMzsFG9swKj96Z6yw36b4sSjlwgtFXUIbYchBCcZd-a2AD-xC6MjId5Y_Dn3vz8vCm6hVzwo9KjR5S6Bx9nbqH1OZBDgAfgoSidMLq8y4GRQErJ2w9SMsCpTr0RvUs4ZlyQH7lL2BESz0cmN1g8E/s16000/A.jpg', desc: '提振力量...', names: '檀香、葡萄柚、依蘭' },
-  TypeB: { title: '幸福光芒香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoABGAalgjPp8TMpg5xYV_RR7mW2oLFnhQRzSaGsgHvL6wNActs7OeUTo0icf2T0YOUnC2TAxdCau8u05AjVIksH2n9xyoWcXY7qoJz1pvhqCUA5ZmOPalQs2tISAsil-9haPTpmWjj6KhRr6BZPVQCclvq2ro6fmg-8Cbpwy0WrUvYJazo1kkrhUIqyA/s16000/B.jpg', desc: '溫柔接住...', names: '柳橙、薰衣草、玫瑰' },
-  TypeC: { title: '沉靜心流香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSOcFAl_QnInsDOd_AFcpmm_gV3uHHFpMDWDSAw-CZym6c4k18TuVUmf3u2nv8JrFhdklsKDhUzreyKOuT4AVljcKarKU5AHy8SkUHG_OLYfirqIPKkYZTRBxLfyLCCt8bDNyNp9EJQ6cSYgqucZMjrMtmezzYSo5ZoUM1Jr7FNhLyFgkIugN-4OB2uqk/s16000/C.jpg', desc: '歸零放鬆...', names: '佛手柑、真正薰衣草' },
-  TypeD: { title: '自信綻放香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfcQse_eoj3HgXioYyjqPI_D6nQm3Z1svoyRPxYRcKof9Eth3T6tEovh_GjsmNLYatz4dGxsqn9YXlGmydUYfL7_6SoX3MNvLfsghmqOOgMxal36b8uAdkG3dZvlpxA7i4YVFg91PAiCmHL_jfPS0fMGmd00LTbz2B4vGglCN1RtkKJP8sEFINwpLIsp0/s16000/D.jpg', desc: '清晰表達...', names: '花梨木、雪松' }
+  TypeA: { title: '黃金能量香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxH6FgMFwmSUf8TwOPG5_w6QOi53dnsZegLIYDVugeMzsFG9swKj96Z6yw36b4sSjlwgtFXUIbYchBCcZd-a2AD-xC6MjId5Y_Dn3vz8vCm6hVzwo9KjR5S6Bx9nbqH1OZBDgAfgoSidMLq8y4GRQErJ2w9SMsCpTr0RvUs4ZlyQH7lL2BESz0cmN1g8E/s16000/A.jpg', desc: '您現在需要的是「提振」與「找回力量」。', names: '檀香、葡萄柚、依蘭' },
+  TypeB: { title: '幸福光芒香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoABGAalgjPp8TMpg5xYV_RR7mW2oLFnhQRzSaGsgHvL6wNActs7OeUTo0icf2T0YOUnC2TAxdCau8u05AjVIksH2n9xyoWcXY7qoJz1pvhqCUA5ZmOPalQs2tISAsil-9haPTpmWjj6KhRr6BZPVQCclvq2ro6fmg-8Cbpwy0WrUvYJazo1kkrhUIqyA/s16000/B.jpg', desc: '心靈渴望被溫柔接住。', names: '柳橙、薰衣草、玫瑰' },
+  TypeC: { title: '沉靜心流香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSOcFAl_QnInsDOd_AFcpmm_gV3uHHFpMDWDSAw-CZym6c4k18TuVUmf3u2nv8JrFhdklsKDhUzreyKOuT4AVljcKarKU5AHy8SkUHG_OLYfirqIPKkYZTRBxLfyLCCt8bDNyNp9EJQ6cSYgqucZMjrMtmezzYSo5ZoUM1Jr7FNhLyFgkIugN-4OB2uqk/s16000/C.jpg', desc: '您需要「卸下重擔」與「歸零」。', names: '佛手柑、真正薰衣草、雪松' },
+  TypeD: { title: '自信綻放香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfcQse_eoj3HgXioYyjqPI_D6nQm3Z1svoyRPxYRcKof9Eth3T6tEovh_GjsmNLYatz4dGxsqn9YXlGmydUYfL7_6SoX3MNvLfsghmqOOgMxal36b8uAdkG3dZvlpxA7i4YVFg91PAiCmHL_jfPS0fMGmd00LTbz2B4vGglCN1RtkKJP8sEFINwpLIsp0/s16000/D.jpg', desc: '您需要清晰的表達力與勇氣。', names: '花梨木、雪松' }
 };
 
 let questions = [], current = 0, scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0}, mainData = {};
 
-// 💡 預載圖片函式
 function preloadImages(data) {
-  data.forEach(q => {
-    if (q.image) {
-      const img = new Image();
-      img.src = q.image;
-    }
-  });
-  // 同時預載結果大圖
-  Object.values(resultOutcomes).forEach(res => {
-    const img = new Image();
-    img.src = res.mainImg;
-  });
+  data.forEach(q => { if (q.image) { const img = new Image(); img.src = q.image; } });
+  Object.values(resultOutcomes).forEach(res => { const img = new Image(); img.src = res.mainImg; });
 }
 
 async function init() {
@@ -115,19 +106,17 @@ async function init() {
     const res = await fetch(API_URL);
     questions = await res.json();
     if(questions && questions.length > 0) {
-      preloadImages(questions); // 💡 在背景預載題目圖片
+      preloadImages(questions);
       document.getElementById('loadingState').classList.add('hidden');
       document.getElementById('step1').classList.remove('hidden');
     }
-  } catch (e) {
-    document.getElementById('loadingMsg').innerText = "連線失敗";
-  }
+  } catch (e) { document.getElementById('loadingMsg').innerText = "連線失敗"; }
 }
 
 function toStep2() {
   mainData.name = document.getElementById('name').value;
-  mainData.email = document.getElementById('email').value;
   if(!mainData.name) return alert("請填寫姓名");
+  mainData.email = document.getElementById('email').value;
   mainData.gender = document.getElementById('gender').value;
   mainData.age = document.getElementById('age').value;
   mainData.job = document.getElementById('job').value;
@@ -148,12 +137,7 @@ function startQuiz() {
 function renderQ() {
   const q = questions[current];
   const qImg = document.getElementById('qImg');
-  if (q.image) {
-    qImg.src = q.image;
-    qImg.style.display = 'block';
-  } else {
-    qImg.style.display = 'none';
-  }
+  if (q.image) { qImg.src = q.image; qImg.style.display = 'block'; } else { qImg.style.display = 'none'; }
   document.getElementById('qText').innerText = q.q;
   const list = document.getElementById('ansList');
   list.innerHTML = '';
@@ -161,11 +145,7 @@ function renderQ() {
     const b = document.createElement('button');
     b.className = 'ans-btn';
     b.innerText = a.text;
-    b.onclick = () => { 
-      if(scores[a.value] !== undefined) scores[a.value]++; 
-      current++; 
-      if(current < questions.length) renderQ(); else showRes(); 
-    };
+    b.onclick = () => { scores[a.value]++; current++; if(current < questions.length) renderQ(); else showRes(); };
     list.appendChild(b);
   });
   document.getElementById('progress').style.width = ((current+1)/questions.length*100)+'%';
