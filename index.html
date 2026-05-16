@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>專屬香氣覺察問眷</title>
+  <title>專屬香氣覺察問卷</title>
   
   <meta property="og:title" content="專屬香氣覺察：尋找您的命定配方" />
   <meta property="og:description" content="只需一分鐘，透過直覺選出最適合您的專屬香氣。" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800" />
+  <meta property="og:type" content="website" />
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -26,14 +27,14 @@
     label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #7d6b5d; font-weight: bold; }
     input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; background: #fff; }
     .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-    .btn { flex: 2; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .btn { flex: 2; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; justify-content: center; }
     .btn-back { flex: 1; background: #e0d5c8; color: #7d6b5d; }
-    .btn-line { background: #06C755; color: white; margin-top: 15px; display: none; text-decoration: none; align-items: center; justify-content: center; font-size: 1rem; }
+    .btn-line { background: #06C755; color: white; margin-top: 15px; display: none; font-size: 1rem; }
     .btn-line:hover { background: #05b34c; }
     .question-image { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; display: none; }
     .result-main-img { width: 100%; height: auto; display: none; border-radius: 15px; margin: 10px 0 10px; }
     .share-hint { font-size: 0.8rem; color: #aaa; margin-bottom: 20px; }
-    .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 10px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
+    .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 10px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; line-height: 1.4; }
     .hidden { display: none !important; }
     .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .progress { height: 100%; width: 0; background: #ff9a62; transition: 0.4s; }
@@ -85,7 +86,7 @@
       
       <button id="finalBtn" class="btn" onclick="submitAll()">送出問卷並預約諮詢</button>
       
-      <a id="lineCommunityBtn" href="https://line.me/ti/g2/你的社群連結" target="_blank" class="btn btn-line">
+      <a id="lineCommunityBtn" href="https://line.me/R/ti/g/vJJxz2eBds" target="_blank" class="btn btn-line">
         加入香氣覺察交流社群
       </a>
       
@@ -98,7 +99,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
 const resultOutcomes = {
   TypeA: { title: '黃金能量香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxH6FgMFwmSUf8TwOPG5_w6QOi53dnsZegLIYDVugeMzsFG9swKj96Z6yw36b4sSjlwgtFXUIbYchBCcZd-a2AD-xC6MjId5Y_Dn3vz8vCm6hVzwo9KjR5S6Bx9nbqH1OZBDgAfgoSidMLq8y4GRQErJ2w9SMsCpTr0RvUs4ZlyQH7lL2BESz0cmN1g8E/s16000/A.jpg', desc: '您現在需要提振力量，找回行動力。', names: '檀香、葡萄柚、依蘭' },
-  TypeB: { title: '幸福光芒香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoABGAalgjPp8TMpg5xYV_RR7mW2oLFnhQRzSaGsgHvL6wNActs7OeUTo0icf2T0YOUnC2TAxdCau8u05AjVIksH2n9xyoWcXY7qoJz1pvhqCUA5ZmOPalQs2tISAsil-9haPTpmWjj6KhRr6BZPVQCclvq2ro6fmg-8Cbpwy0WrUvYJazo1kkrhUIqyA/s16000/B.jpg', desc: '心靈渴望被溫柔接住，感受到包覆感。', names: '柳橙、薰議草、玫瑰' },
+  TypeB: { title: '幸福光芒香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoABGAalgjPp8TMpg5xYV_RR7mW2oLFnhQRzSaGsgHvL6wNActs7OeUTo0icf2T0YOUnC2TAxdCau8u05AjVIksH2n9xyoWcXY7qoJz1pvhqCUA5ZmOPalQs2tISAsil-9haPTpmWjj6KhRr6BZPVQCclvq2ro6fmg-8Cbpwy0WrUvYJazo1kkrhUIqyA/s16000/B.jpg', desc: '心靈渴望被溫柔接住，感受到包覆感。', names: '柳橙、薰衣草、玫瑰' },
   TypeC: { title: '沉靜心流香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSOcFAl_QnInsDOd_AFcpmm_gV3uHHFpMDWDSAw-CZym6c4k18TuVUmf3u2nv8JrFhdklsKDhUzreyKOuT4AVljcKarKU5AHy8SkUHG_OLYfirqIPKkYZTRBxLfyLCCt8bDNyNp9EJQ6cSYgqucZMjrMtmezzYSo5ZoUM1Jr7FNhLyFgkIugN-4OB2uqk/s16000/C.jpg', desc: '您需要卸下重擔與歸零，進入放鬆狀態。', names: '佛手柑、真正薰衣草、雪松' },
   TypeD: { title: '自信綻放香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfcQse_eoj3HgXioYyjqPI_D6nQm3Z1svoyRPxYRcKof9Eth3T6tEovh_GjsmNLYatz4dGxsqn9YXlGmydUYfL7_6SoX3MNvLfsghmqOOgMxal36b8uAdkG3dZvlpxA7i4YVFg91PAiCmHL_jfPS0fMGmd00LTbz2B4vGglCN1RtkKJP8sEFINwpLIsp0/s16000/D.jpg', desc: '您需要清晰的表達力與穩定的自信。', names: '花梨木、雪松' }
 };
@@ -160,10 +161,9 @@ async function submitAll() {
   const payload = { ...mainData, resultTitle: outcome.title, selectedProducts: outcome.names };
   await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
   
-  // 💡 送出成功後的變動
   btn.style.display = 'none';
   document.getElementById('status').innerText = "✓ 預約諮詢資料已送出！歡迎加入社群與我們交流：";
-  document.getElementById('lineCommunityBtn').style.display = 'flex'; // 顯示社群按鈕
+  document.getElementById('lineCommunityBtn').style.display = 'flex';
 }
 
 window.onload = init;
