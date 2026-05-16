@@ -43,7 +43,7 @@
 
   <div class="container">
     <div class="card">
-      <div id="loadingState" class="loading-state"><div class="oil-drip"></div><p>正在萃取香氣題目...</p></div>
+      <div id="loadingState" class="loading-state"><div class="oil-drip"></div><p id="loadingMsg">正在萃取香氣題目...</p></div>
 
       <div id="quizContent" class="hidden">
         <div class="progress-bar"><div class="progress" id="progress"></div></div>
@@ -52,101 +52,122 @@
       </div>
 
       <div id="result" class="hidden">
-        <h2 id="resultTitle" style="color:#5c4a3c; text-align:center;"></h2>
+        <h2 id="resultTitle" style="color:#5c4a3c; text-align:center; margin-bottom:15px;"></h2>
         <div id="imageContainer" class="result-img-grid"></div>
-        <p id="resultDesc" style="font-size:0.95rem; line-height:1.7; color:#666; margin-bottom:20px;"></p>
+        <p id="resultDesc" style="font-size:0.95rem; line-height:1.7; color:#666; margin-bottom:20px; text-align: justify;"></p>
         
         <div class="form-group">
-          <input type="text" id="userName" placeholder="姓名">
-          <input type="text" id="userContact" placeholder="Line ID / 電話">
+          <input type="text" id="userName" placeholder="請輸入姓名">
+          <input type="text" id="userContact" placeholder="請輸入電話或 Line ID">
           <button id="submitBtn" class="submit-btn" onclick="sendData()">送出問卷並預約諮詢</button>
-          <p id="statusMsg" style="text-align:center; margin-top:10px; font-size:0.85rem;"></p>
+          <p id="statusMsg" style="text-align:center; margin-top:10px; font-size:0.85rem; color:#7d6b5d;"></p>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const API_URL = "您的GAS部署網址";
+    // 💡 重要：請務必將此處替換為您最新的 GAS 部署網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
 
     const resultOutcomes = {
       TypeA: {
         title: '黃金能量香水',
         names: '檀香、葡萄柚、依蘭',
         images: ['https://images.unsplash.com/photo-1612217433315-0624637d320c?w=150','https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=150','https://images.unsplash.com/photo-1596003906949-67221c37965c?w=150'],
-        desc: '您現在最需要的是「提振」與「找回力量」。檀香提供穩定氣場，結合葡萄柚明亮果香，能掃除腦中陰霾，重拾行動力。'
+        desc: '您現在最需要的是「提振」與「找回力量」。檀香能提供穩定的氣場，結合葡萄柚明亮果香，能掃除腦中的陰霾，重拾對生活的掌控感與行動力。'
       },
       TypeB: {
         title: '幸福光芒香水',
         names: '柳橙、薰衣草、玫瑰、廣藿香',
         images: ['https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=150','https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=150','https://images.unsplash.com/photo-1559563458-527698bf5295?w=150','https://images.unsplash.com/photo-1595981267035-7b04ca84a82d?w=150'],
-        desc: '您近期的心靈渴望被溫柔接住。玫瑰能帶來愉悅感，搭配薰衣草能安撫過度敏感的神經，讓您感受到被愛包圍。'
+        desc: '您近期的心靈渴望被溫柔接住。玫瑰能帶來愉悅感與自我認同，搭配薰衣草能安撫過度敏感的神經，讓您感受到被無條件愛護的溫暖光芒。'
       },
       TypeC: {
         title: '沉靜心流香水',
         names: '佛手柑、真正薰衣草、雪松',
         images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1595928642581-f50f4f3453a5?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'],
-        desc: '您目前最需要的是「卸下重擔」與「深層歸零」。佛手柑能疏通鬱結，搭配雪松的森林氣息，幫助您放鬆深層壓力。'
+        desc: '您目前最需要的是「卸下重擔」與「深層歸零」。佛手柑能疏通鬱結的情緒，搭配雪松宛如置身森林般的氣息，能幫助您放慢呼吸節奏，進入平穩的心流狀態。'
       },
       TypeD: {
         title: '自信綻放香水',
         names: '佛手柑、花梨木、雪松',
         images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1602928321679-560bb453f190?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'],
-        desc: '您現在需要清晰的表達力與自信。花梨木溫暖的力量能穩定思緒，雪松則帶來堅定的底氣，讓您無畏地面對挑戰。'
+        desc: '您現在需要清晰的表達力與自信。花梨木溫暖的力量能穩定思緒並開啟心輪，雪松則帶來堅定不移的底氣，讓您無畏地面對他人眼光，自信綻放。'
       }
     };
 
     let questions = [];
     let current = 0;
-    let scores = { TypeA:0, TypeB:0, TypeC:0, TypeD:0 };
+    let scores = { TypeA: 0, TypeB: 0, TypeC: 0, TypeD: 0 };
     let finalKey = "";
 
     async function init() {
-      const cache = localStorage.getItem('aroma_cache');
-      if(cache) { questions = JSON.parse(cache); start(); }
+      // 1. 檢查快取
+      const cache = localStorage.getItem('aroma_cache_v2');
+      if (cache) {
+        questions = JSON.parse(cache);
+        startQuiz();
+      }
+
+      // 2. 向 GAS 請求數據
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
-        if(data.length > 0) { 
-          questions = data; 
-          localStorage.setItem('aroma_cache', JSON.stringify(data));
-          if(!cache) start();
+        if (data && data.length > 0) {
+          questions = data;
+          localStorage.setItem('aroma_cache_v2', JSON.stringify(data));
+          if (!cache) startQuiz();
         }
-      } catch(e) { if(!cache) alert("連線失敗"); }
+      } catch (e) {
+        console.error(e);
+        if (!cache) document.getElementById('loadingMsg').innerText = "連線失敗，請檢查網路或 API 網址。";
+      }
     }
 
-    function start() {
+    function startQuiz() {
       document.getElementById('loadingState').classList.add('hidden');
       document.getElementById('quizContent').classList.remove('hidden');
-      render();
+      renderQuestion();
     }
 
-    function render() {
+    function renderQuestion() {
       const q = questions[current];
       document.getElementById('question').innerText = q.q;
-      const div = document.getElementById('answers');
-      div.innerHTML = '';
+      const ansDiv = document.getElementById('answers');
+      ansDiv.innerHTML = '';
+      
       q.answers.forEach(a => {
         const btn = document.createElement('button');
         btn.className = 'answer-btn';
         btn.innerText = a.text;
         btn.onclick = () => {
-          scores[a.value]++;
+          if (scores.hasOwnProperty(a.value)) {
+            scores[a.value]++;
+          }
           current++;
-          if(current < questions.length) render(); else show();
+          if (current < questions.length) {
+            renderQuestion();
+          } else {
+            showResult();
+          }
         };
-        div.appendChild(btn);
+        ansDiv.appendChild(btn);
       });
-      document.getElementById('progress').style.width = ((current+1)/questions.length*100)+'%';
+      document.getElementById('progress').style.width = ((current + 1) / questions.length * 100) + '%';
     }
 
-    function show() {
+    function showResult() {
       document.getElementById('quizContent').classList.add('hidden');
+      // 💡 計算得分最高者
       finalKey = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-      const res = resultOutcomes[finalKey];
+      const res = resultOutcomes[finalKey] || resultOutcomes['TypeA'];
+      
       document.getElementById('resultTitle').innerText = res.title;
       document.getElementById('resultDesc').innerText = res.desc;
+      
       const imgDiv = document.getElementById('imageContainer');
+      imgDiv.innerHTML = '';
       res.images.forEach(src => {
         const img = document.createElement('img');
         img.src = src;
@@ -158,24 +179,31 @@
     function sendData() {
       const name = document.getElementById('userName').value;
       const contact = document.getElementById('userContact').value;
-      if(!name || !contact) return alert("請填寫資料");
+      if (!name || !contact) return alert("請填寫姓名與聯絡資訊喔！");
       
       const btn = document.getElementById('submitBtn');
+      if (btn.disabled) return;
+      
       btn.disabled = true;
-      btn.innerText = "傳送中...";
+      btn.innerText = "資料傳送中...";
       
       fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify({
-          name, contact,
+          name: name,
+          contact: contact,
           resultType: finalKey,
           resultTitle: resultOutcomes[finalKey].title,
           selectedProducts: resultOutcomes[finalKey].names
         })
       }).then(() => {
-        document.getElementById('statusMsg').innerText = "✓ 成功提交，老師將會與您聯繫！";
+        document.getElementById('statusMsg').innerText = "✓ 資料已成功提交！老師將會儘快與您聯繫。";
         btn.style.display = 'none';
+      }).catch(err => {
+        btn.disabled = false;
+        btn.innerText = "重新送出";
+        alert("傳送發生錯誤，請再試一次。");
       });
     }
 
