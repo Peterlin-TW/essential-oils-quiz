@@ -13,19 +13,12 @@
     .hero h1 { color: white; z-index: 2; font-size: 1.5rem; }
     .container { max-width: 500px; margin: -30px auto 40px; padding: 0 15px; position: relative; z-index: 5; }
     .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-    
     h3 { margin-bottom: 20px; color: #5c4a3c; font-size: 1.1rem; border-left: 4px solid #ff9a62; padding-left: 10px; }
     label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #7d6b5d; font-weight: bold; }
     input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; }
-    textarea { height: 80px; }
-    
     .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    .btn:hover { background: #5c4a3c; }
-
     .question-image { width: 100%; height: 180px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
     .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 10px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
-    .ans-btn:hover { background: #fff3eb; }
-
     .hidden { display: none !important; }
     .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .progress { height: 100%; width: 0; background: #ff9a62; transition: 0.4s; }
@@ -39,34 +32,35 @@
 
 <div class="container">
   <div class="card">
-    
     <div id="step1">
       <h3>【第一部分】基本資料</h3>
       <label>姓名</label><input type="text" id="name">
       <label>E-mail</label><input type="email" id="email">
-      <label>性別</label>
-      <select id="gender"><option value="女">女</option><option value="男">男</option><option value="其他">其他</option></select>
-      <label>年齡區間</label>
-      <select id="age">
-        <option value="20以下">20歲以下</option><option value="21-30">21-30歲</option><option value="31-40">31-40歲</option>
-        <option value="41-50">41-50歲</option><option value="51-60">51-60歲</option><option value="60+">60歲以上</option>
-      </select>
-      <label>職業類型</label><input type="text" id="job" placeholder="例如：上班族、自由工作者">
-      <label>目前居住地</label>
-      <select id="location"><option value="北部">北部</option><option value="中部">中部</option><option value="南部">南部</option><option value="東部">東部</option><option value="海外">海外</option></select>
-      <button class="btn" onclick="toStep2()">下一步：生活軌跡</button>
+      <label>性別</label><select id="gender"><option value="女">女</option><option value="男">男</option><option value="其他">其他</option></select>
+      <label>年齡區區間</label>
+      <select id="age"><option value="20以下">20歲以下</option><option value="21-30">21-30歲</option><option value="31-40">31-40歲</option><option value="41-50">41-50歲</option><option value="51-60">51-60歲</option><option value="60+">60歲以上</option></select>
+      <label>職業類型</label><input type="text" id="job">
+      <label>目前居住地</label><select id="location"><option value="北部">北部</option><option value="中部">中部</option><option value="南部">南部</option><option value="東部">東部</option><option value="海外">海外</option></select>
+      <button class="btn" onclick="toStep2()">下一步：身心掃描</button>
     </div>
 
     <div id="step2" class="hidden">
-      <h3>【第二部分】生活軌跡</h3>
-      <label>氣味的情感記憶 (例如：下雨的味道)</label>
-      <textarea id="smellMemory"></textarea>
-      <label>目前的壓力指數 (1放鬆 - 10耗竭)</label>
+      <h3>【第二部分】身心掃描</h3>
+      <label>氣味的情感記憶</label><textarea id="smellMemory" placeholder="是否有味道會讓您聯想到特定回憶？"></textarea>
+      
+      <label>目前的壓力指數 (1放鬆 - 10緊繃備戰)</label>
       <select id="stressLevel">
-        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option>
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
         <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
       </select>
-      <button class="btn" onclick="startQuiz()">開始香氣覺察測驗</button>
+
+      <label>目前的疲憊指數 (1精神好 - 10筋疲力盡)</label>
+      <select id="tiredLevel">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+        <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+      </select>
+
+      <button class="btn" onclick="startQuiz()">進入香氣覺察測驗</button>
     </div>
 
     <div id="quiz" class="hidden">
@@ -77,13 +71,12 @@
     </div>
 
     <div id="result" class="hidden" style="text-align: center;">
-      <h2 id="resTitle" style="color: #5c4a3c; margin-bottom: 15px;"></h2>
+      <h2 id="resTitle" style="color:#5c4a3c; margin-bottom:15px;"></h2>
       <div id="resImgs" class="result-imgs"></div>
-      <p id="resDesc" style="font-size: 0.9rem; line-height: 1.6; color: #666; margin-bottom: 20px; text-align: justify;"></p>
-      <button id="finalBtn" class="btn" onclick="submitAll()">送出問卷並領取配方建議</button>
-      <p id="status" style="margin-top: 15px; font-size: 0.8rem; color: #ff9a62;"></p>
+      <p id="resDesc" style="font-size:0.9rem; line-height:1.6; color:#666; margin-bottom:20px; text-align:justify;"></p>
+      <button id="finalBtn" class="btn" onclick="submitAll()">送出問卷並預約諮詢</button>
+      <p id="status" style="margin-top:15px; font-size:0.8rem; color:#ff9a62;"></p>
     </div>
-
   </div>
 </div>
 
@@ -113,6 +106,7 @@ function toStep2() {
 async function startQuiz() {
   mainData.smellMemory = document.getElementById('smellMemory').value;
   mainData.stressLevel = document.getElementById('stressLevel').value;
+  mainData.tiredLevel = document.getElementById('tiredLevel').value;
   document.getElementById('step2').classList.add('hidden');
   document.getElementById('quiz').classList.remove('hidden');
   const res = await fetch(API_URL);
@@ -155,7 +149,6 @@ async function submitAll() {
   btn.disabled = true; btn.innerText = "傳送中...";
   const outcome = resultOutcomes[mainData.resultType];
   const payload = { ...mainData, resultTitle: outcome.title, selectedProducts: outcome.names };
-  
   await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
   document.getElementById('status').innerText = "✓ 送出成功！老師將會儘快聯繫您。";
   btn.style.display = 'none';
