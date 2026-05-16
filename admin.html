@@ -3,52 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>芳療後台 - RWD 卡片版</title>
+  <title>芳療後台 - 數據管理</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --color-a: #d9480f; --bg-a: #fff4e6;
+      --color-b: #5f3dc4; --bg-b: #f3f0ff;
+      --color-c: #2b8a3e; --bg-c: #ebfbee;
+      --color-d: #1971c2; --bg-d: #e7f5ff;
+    }
     body { font-family: 'Noto Sans TC', sans-serif; background: #fdfaf7; padding: 15px; color: #444; font-size: 16px; }
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .dashboard { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; margin-bottom: 20px; }
     
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
     th { background: #5c4a3c; color: white; padding: 12px; text-align: left; font-size: 0.9rem; }
-    td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
 
-    /* 💡 手機版轉卡片邏輯 */
+    /* 🏷️ 顏色標籤樣式定義 */
+    .tag { padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; display: inline-block; }
+    .tag-A { background: var(--bg-a); color: var(--color-a); }
+    .tag-B { background: var(--bg-b); color: var(--color-b); }
+    .tag-C { background: var(--bg-c); color: var(--color-c); }
+    .tag-D { background: var(--bg-d); color: var(--color-d); }
+
+    /* 📱 手機版 RWD 卡片化佈局 */
     @media (max-width: 768px) {
       .dashboard { grid-template-columns: 1fr; }
       thead { display: none; }
-      tr { display: block; background: white; margin-bottom: 15px; border-radius: 12px; padding: 10px; border: 1px solid #eee; }
-      td { display: flex; justify-content: space-between; border-bottom: 1px solid #f9f9f9; padding: 10px 5px !important; }
-      td::before { content: attr(data-label); font-weight: bold; color: #888; }
+      tr { display: block; background: white; margin-bottom: 15px; border-radius: 12px; padding: 10px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+      td { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f9f9f9; padding: 12px 5px !important; }
+      td::before { content: attr(data-label); font-weight: bold; color: #888; font-size: 0.85rem; }
+      td:last-child { border-bottom: none; }
     }
 
-    .tag { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
-    .tag-A { background: #fff4e6; color: #d9480f; } .tag-B { background: #f3f0ff; color: #5f3dc4; }
-    .tag-C { background: #ebfbee; color: #2b8a3e; } .tag-D { background: #e7f5ff; color: #1971c2; }
-    input[type="date"] { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; margin: 5px 0 10px; }
+    input[type="date"] { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; margin: 8px 0; background: #fff; }
+    .refresh-btn { background: #5c4a3c; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
   </style>
 </head>
 <body>
 
+<button class="refresh-btn" onclick="fetchData()">🔄 同步最新雲端資料</button>
+
 <div class="dashboard">
   <div class="card">
-    <strong>🗓️ 日期篩選</strong><br>
-    從 <input type="date" id="startDate" onchange="applyFilter()"><br>
-    到 <input type="date" id="endDate" onchange="applyFilter()">
+    <strong>🗓️ 日期區間篩選</strong>
+    <input type="date" id="startDate" onchange="applyFilter()">
+    <input type="date" id="endDate" onchange="applyFilter()">
   </div>
   <div class="card">
-    <strong>📦 庫存統計</strong>
-    <table style="margin-top:10px; font-size: 0.85rem;">
+    <strong>📦 庫存統計合計</strong>
+    <table style="margin-top:10px;">
       <tbody id="statBody"></tbody>
     </table>
   </div>
 </div>
 
 <div class="card" style="padding: 10px;">
-  <strong style="padding: 10px; display: block;">📋 詳細清單</strong>
+  <strong style="padding: 15px; display: block;">📋 詳細測驗清單</strong>
   <table>
-    <thead><tr><th>日期</th><th>姓名</th><th>指標</th><th>結果</th></tr></thead>
+    <thead>
+      <tr>
+        <th>填答日期</th>
+        <th>學員姓名</th>
+        <th>壓力/疲憊</th>
+        <th>測驗結果類型</th>
+      </tr>
+    </thead>
     <tbody id="adminBody"></tbody>
   </table>
 </div>
@@ -58,17 +79,33 @@ const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBe
 let allData = [];
 const productInfo = { TypeA: '黃金能量', TypeB: '幸福光芒', TypeC: '沉靜心流', TypeD: '自信綻放' };
 
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr.split('T')[0] || dateStr.split(' ')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 async function fetchData() {
-  const res = await fetch(API_URL);
-  allData = await res.json();
-  applyFilter();
+  const btn = document.querySelector('.refresh-btn');
+  btn.innerText = "讀取中...";
+  try {
+    const res = await fetch(API_URL);
+    allData = await res.json();
+    applyFilter();
+    btn.innerText = "🔄 同步最新雲端資料";
+  } catch (e) {
+    btn.innerText = "❌ 讀取失敗，請重新整理";
+  }
 }
 
 function applyFilter() {
   const s = document.getElementById('startDate').value;
   const e = document.getElementById('endDate').value;
   const filtered = allData.filter(row => {
-    const d = row.date.split('T')[0] || row.date.split(' ')[0];
+    const d = formatDate(row.date);
     return (!s || d >= s) && (!e || d <= e);
   });
   updateStats(filtered);
@@ -77,24 +114,34 @@ function applyFilter() {
 
 function updateStats(data) {
   const stats = { TypeA: 0, TypeB: 0, TypeC: 0, TypeD: 0 };
-  data.forEach(r => stats[r.resultType]++);
-  const body = document.getElementById('statBody'); body.innerHTML = '';
+  data.forEach(r => { if(stats[r.resultType] !== undefined) stats[r.resultType]++; });
+  const body = document.getElementById('statBody');
+  body.innerHTML = '';
   for (let t in stats) {
     const pct = data.length ? (stats[t]/data.length*100).toFixed(1) : 0;
-    body.innerHTML += `<tr><td><span class="tag tag-${t.slice(-1)}">${t}</span></td><td>${productInfo[t]}</td><td>${stats[t]}人</td><td>${pct}%</td></tr>`;
+    const typeKey = t.slice(-1); // A, B, C, D
+    body.innerHTML += `
+      <tr>
+        <td><span class="tag tag-${typeKey}">${t}</span></td>
+        <td style="font-size:0.85rem">${productInfo[t]}</td>
+        <td><strong>${stats[t]}人</strong></td>
+        <td style="color:#888; font-size:0.8rem">${pct}%</td>
+      </tr>`;
   }
 }
 
 function renderTable(data) {
-  const body = document.getElementById('adminBody'); body.innerHTML = '';
+  const body = document.getElementById('adminBody');
+  body.innerHTML = '';
   data.forEach(r => {
-    const d = r.date.split('T')[0] || r.date.split(' ')[0];
+    const d = formatDate(r.date);
+    const typeKey = r.resultType.slice(-1); // 取得 A, B, C 或 D
     body.innerHTML += `
       <tr>
         <td data-label="日期">${d}</td>
         <td data-label="姓名"><strong>${r.name}</strong></td>
-        <td data-label="指標">${r.stressLevel}/${r.tiredLevel}</td>
-        <td data-label="結果">${r.resultTitle}</td>
+        <td data-label="指標">壓：${r.stressLevel} / 疲：${r.tiredLevel}</td>
+        <td data-label="結果"><span class="tag tag-${typeKey}">${r.resultTitle}</span></td>
       </tr>`;
   });
 }
