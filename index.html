@@ -7,12 +7,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
-    body { background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%); min-height: 100vh; color: #3b2f2f; -webkit-user-select: none; user-select: none; }
+    body { background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%); min-height: 100vh; color: #3b2f2f; }
     .hero { position: relative; height: 280px; background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop'); background-size: cover; background-position: center; display: flex; align-items: end; padding: 24px; }
     .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); }
     .hero-content { position: relative; z-index: 2; color: white; }
     .container { max-width: 500px; margin: -40px auto 40px; position: relative; z-index: 5; padding: 0 16px; }
     .card { background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 28px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    
+    /* 題目圖片樣式 */
+    .question-image { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; display: none; }
     
     .loading-state { text-align: center; padding: 60px 20px; }
     .oil-drip { width: 16px; height: 16px; background: #ff9a62; border-radius: 50% 0 50% 50%; transform: rotate(45deg); margin: 0 auto 20px; animation: drip 1.2s infinite ease-in; }
@@ -30,7 +33,7 @@
     .result-img-grid img { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     
     .form-group { margin-top: 25px; padding: 20px; background: rgba(255,154,98,0.1); border-radius: 20px; }
-    input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
+    input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; }
     .submit-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; }
     .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
@@ -47,6 +50,7 @@
 
       <div id="quizContent" class="hidden">
         <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <img id="qImage" class="question-image" src="">
         <div id="question" class="question"></div>
         <div id="answers" class="answers"></div>
       </div>
@@ -54,11 +58,11 @@
       <div id="result" class="hidden">
         <h2 id="resultTitle" style="color:#5c4a3c; text-align:center; margin-bottom:15px;"></h2>
         <div id="imageContainer" class="result-img-grid"></div>
-        <p id="resultDesc" style="font-size:0.95rem; line-height:1.7; color:#666; margin-bottom:20px; text-align: justify;"></p>
+        <p id="resultDesc" style="font-size:0.95rem; line-height:1.7; color:#666; margin-bottom:20px;"></p>
         
         <div class="form-group">
-          <input type="text" id="userName" placeholder="請輸入姓名">
-          <input type="text" id="userContact" placeholder="請輸入電話或 Line ID">
+          <input type="text" id="userName" placeholder="姓名">
+          <input type="text" id="userContact" placeholder="電話或 Line ID">
           <button id="submitBtn" class="submit-btn" onclick="sendData()">送出問卷並預約諮詢</button>
           <p id="statusMsg" style="text-align:center; margin-top:10px; font-size:0.85rem; color:#7d6b5d;"></p>
         </div>
@@ -67,65 +71,34 @@
   </div>
 
   <script>
-    // 💡 重要：請務必將此處替換為您最新的 GAS 部署網址
-    const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
+    const API_URL = "您的GAS網址";
 
     const resultOutcomes = {
-      TypeA: {
-        title: '黃金能量香水',
-        names: '檀香、葡萄柚、依蘭',
-        images: ['https://images.unsplash.com/photo-1612217433315-0624637d320c?w=150','https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=150','https://images.unsplash.com/photo-1596003906949-67221c37965c?w=150'],
-        desc: '您現在最需要的是「提振」與「找回力量」。檀香能提供穩定的氣場，結合葡萄柚明亮果香，能掃除腦中的陰霾，重拾對生活的掌控感與行動力。'
-      },
-      TypeB: {
-        title: '幸福光芒香水',
-        names: '柳橙、薰衣草、玫瑰、廣藿香',
-        images: ['https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=150','https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=150','https://images.unsplash.com/photo-1559563458-527698bf5295?w=150','https://images.unsplash.com/photo-1595981267035-7b04ca84a82d?w=150'],
-        desc: '您近期的心靈渴望被溫柔接住。玫瑰能帶來愉悅感與自我認同，搭配薰衣草能安撫過度敏感的神經，讓您感受到被無條件愛護的溫暖光芒。'
-      },
-      TypeC: {
-        title: '沉靜心流香水',
-        names: '佛手柑、真正薰衣草、雪松',
-        images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1595928642581-f50f4f3453a5?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'],
-        desc: '您目前最需要的是「卸下重擔」與「深層歸零」。佛手柑能疏通鬱結的情緒，搭配雪松宛如置身森林般的氣息，能幫助您放慢呼吸節奏，進入平穩的心流狀態。'
-      },
-      TypeD: {
-        title: '自信綻放香水',
-        names: '佛手柑、花梨木、雪松',
-        images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1602928321679-560bb453f190?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'],
-        desc: '您現在需要清晰的表達力與自信。花梨木溫暖的力量能穩定思緒並開啟心輪，雪松則帶來堅定不移的底氣，讓您無畏地面對他人眼光，自信綻放。'
-      }
+      TypeA: { title: '黃金能量香水', names: '檀香、葡萄柚、依蘭', images: ['https://images.unsplash.com/photo-1612217433315-0624637d320c?w=150','https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=150','https://images.unsplash.com/photo-1596003906949-67221c37965c?w=150'], desc: '您現在需要的是「提振」與「找回力量」。檀香穩定氣場，葡萄柚掃除腦中陰霾。' },
+      TypeB: { title: '幸福光芒香水', names: '柳橙、薰衣草、玫瑰、廣藿香', images: ['https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=150','https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=150','https://images.unsplash.com/photo-1559563458-527698bf5295?w=150','https://images.unsplash.com/photo-1595981267035-7b04ca84a82d?w=150'], desc: '您心靈渴望被溫柔接住。玫瑰帶來愉悅感，薰衣草安撫情緒。' },
+      TypeC: { title: '沉靜心流香水', names: '佛手柑、真正薰衣草、雪松', images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1595928642581-f50f4f3453a5?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'], desc: '您需要「卸下重擔」與「歸零」。佛手柑疏通鬱結，雪松放鬆深層壓力。' },
+      TypeD: { title: '自信綻放香水', names: '佛手柑、花梨木、雪松', images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1602928321679-560bb453f190?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'], desc: '您需要清晰的表達力與自信。花梨木穩定思緒，雪松帶來堅定底氣。' }
     };
 
     let questions = [];
     let current = 0;
     let scores = { TypeA: 0, TypeB: 0, TypeC: 0, TypeD: 0 };
-    let finalKey = "";
 
     async function init() {
-      // 1. 檢查快取
-      const cache = localStorage.getItem('aroma_cache_v2');
-      if (cache) {
-        questions = JSON.parse(cache);
-        startQuiz();
-      }
-
-      // 2. 向 GAS 請求數據
+      const cache = localStorage.getItem('aroma_cache_v3');
+      if (cache) { questions = JSON.parse(cache); start(); }
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
-        if (data && data.length > 0) {
+        if (data.length > 0) {
           questions = data;
-          localStorage.setItem('aroma_cache_v2', JSON.stringify(data));
-          if (!cache) startQuiz();
+          localStorage.setItem('aroma_cache_v3', JSON.stringify(data));
+          if (!cache) start();
         }
-      } catch (e) {
-        console.error(e);
-        if (!cache) document.getElementById('loadingMsg').innerText = "連線失敗，請檢查網路或 API 網址。";
-      }
+      } catch (e) { if (!cache) document.getElementById('loadingMsg').innerText = "連線失敗"; }
     }
 
-    function startQuiz() {
+    function start() {
       document.getElementById('loadingState').classList.add('hidden');
       document.getElementById('quizContent').classList.remove('hidden');
       renderQuestion();
@@ -133,6 +106,16 @@
 
     function renderQuestion() {
       const q = questions[current];
+      const qImg = document.getElementById('qImage');
+      
+      // 💡 處理題目圖片
+      if (q.image && q.image.startsWith('http')) {
+        qImg.src = q.image;
+        qImg.style.display = 'block';
+      } else {
+        qImg.style.display = 'none';
+      }
+
       document.getElementById('question').innerText = q.q;
       const ansDiv = document.getElementById('answers');
       ansDiv.innerHTML = '';
@@ -142,15 +125,9 @@
         btn.className = 'answer-btn';
         btn.innerText = a.text;
         btn.onclick = () => {
-          if (scores.hasOwnProperty(a.value)) {
-            scores[a.value]++;
-          }
+          if (scores.hasOwnProperty(a.value)) scores[a.value]++;
           current++;
-          if (current < questions.length) {
-            renderQuestion();
-          } else {
-            showResult();
-          }
+          if (current < questions.length) renderQuestion(); else showResult();
         };
         ansDiv.appendChild(btn);
       });
@@ -159,8 +136,7 @@
 
     function showResult() {
       document.getElementById('quizContent').classList.add('hidden');
-      // 💡 計算得分最高者
-      finalKey = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+      const finalKey = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
       const res = resultOutcomes[finalKey] || resultOutcomes['TypeA'];
       
       document.getElementById('resultTitle').innerText = res.title;
@@ -174,36 +150,33 @@
         imgDiv.appendChild(img);
       });
       document.getElementById('result').classList.remove('hidden');
+      window.finalType = finalKey; // 存起來送出用
     }
 
     function sendData() {
       const name = document.getElementById('userName').value;
       const contact = document.getElementById('userContact').value;
-      if (!name || !contact) return alert("請填寫姓名與聯絡資訊喔！");
+      if (!name || !contact) return alert("請填寫姓名與聯絡資訊");
       
       const btn = document.getElementById('submitBtn');
-      if (btn.disabled) return;
-      
       btn.disabled = true;
-      btn.innerText = "資料傳送中...";
+      btn.innerText = "傳送中...";
       
+      const res = resultOutcomes[window.finalType];
+
       fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify({
           name: name,
           contact: contact,
-          resultType: finalKey,
-          resultTitle: resultOutcomes[finalKey].title,
-          selectedProducts: resultOutcomes[finalKey].names
+          resultType: window.finalType,
+          resultTitle: res.title,
+          selectedProducts: res.names
         })
       }).then(() => {
-        document.getElementById('statusMsg').innerText = "✓ 資料已成功提交！老師將會儘快與您聯繫。";
+        document.getElementById('statusMsg').innerText = "✓ 成功提交，老師將會與您聯繫！";
         btn.style.display = 'none';
-      }).catch(err => {
-        btn.disabled = false;
-        btn.innerText = "重新送出";
-        alert("傳送發生錯誤，請再試一次。");
       });
     }
 
