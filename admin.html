@@ -20,25 +20,27 @@
     th { background: #5c4a3c; color: white; padding: 12px; text-align: left; font-size: 0.9rem; }
     td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
 
-    /* 🏷️ 顏色標籤樣式定義 */
     .tag { padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; display: inline-block; }
     .tag-A { background: var(--bg-a); color: var(--color-a); }
     .tag-B { background: var(--bg-b); color: var(--color-b); }
     .tag-C { background: var(--bg-c); color: var(--color-c); }
     .tag-D { background: var(--bg-d); color: var(--color-d); }
 
-    /* 📱 手機版 RWD 卡片化佈局 */
+    /* 總計列樣式 */
+    .total-row { background: #f8f9fa; font-weight: bold; color: #3b2f2f; border-top: 2px solid #5c4a3c; }
+
     @media (max-width: 768px) {
       .dashboard { grid-template-columns: 1fr; }
       thead { display: none; }
-      tr { display: block; background: white; margin-bottom: 15px; border-radius: 12px; padding: 10px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+      tr { display: block; background: white; margin-bottom: 15px; border-radius: 12px; padding: 10px; border: 1px solid #eee; }
       td { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f9f9f9; padding: 12px 5px !important; }
       td::before { content: attr(data-label); font-weight: bold; color: #888; font-size: 0.85rem; }
       td:last-child { border-bottom: none; }
+      .total-row { border-top: none; background: #fffbe6; } /* 手機版總計特別色 */
     }
 
     input[type="date"] { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; margin: 8px 0; background: #fff; }
-    .refresh-btn { background: #5c4a3c; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
+    .refresh-btn { background: #5c4a3c; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; font-size: 1rem; }
   </style>
 </head>
 <body>
@@ -47,7 +49,7 @@
 
 <div class="dashboard">
   <div class="card">
-    <strong>🗓️ 日期區間篩選</strong>
+    <strong>🗓️ 日期篩選</strong>
     <input type="date" id="startDate" onchange="applyFilter()">
     <input type="date" id="endDate" onchange="applyFilter()">
   </div>
@@ -55,6 +57,7 @@
     <strong>📦 庫存統計合計</strong>
     <table style="margin-top:10px;">
       <tbody id="statBody"></tbody>
+      <tfoot id="statFoot"></tfoot>
     </table>
   </div>
 </div>
@@ -66,8 +69,8 @@
       <tr>
         <th>填答日期</th>
         <th>學員姓名</th>
-        <th>壓力/疲憊</th>
-        <th>測驗結果類型</th>
+        <th>壓力/疲憊指標</th>
+        <th>測驗結果</th>
       </tr>
     </thead>
     <tbody id="adminBody"></tbody>
@@ -115,19 +118,29 @@ function applyFilter() {
 function updateStats(data) {
   const stats = { TypeA: 0, TypeB: 0, TypeC: 0, TypeD: 0 };
   data.forEach(r => { if(stats[r.resultType] !== undefined) stats[r.resultType]++; });
+  
   const body = document.getElementById('statBody');
+  const foot = document.getElementById('statFoot');
   body.innerHTML = '';
+  
   for (let t in stats) {
     const pct = data.length ? (stats[t]/data.length*100).toFixed(1) : 0;
-    const typeKey = t.slice(-1); // A, B, C, D
+    // 💡 這裡移除了顯示 TypeA 標籤，直接顯示名稱
     body.innerHTML += `
       <tr>
-        <td><span class="tag tag-${typeKey}">${t}</span></td>
-        <td style="font-size:0.85rem">${productInfo[t]}</td>
-        <td><strong>${stats[t]}人</strong></td>
-        <td style="color:#888; font-size:0.8rem">${pct}%</td>
+        <td style="font-weight:bold; color:#5c4a3c;">${productInfo[t]}</td>
+        <td><strong>${stats[t]} 人</strong></td>
+        <td style="color:#888; font-size:0.8rem; text-align:right;">${pct}%</td>
       </tr>`;
   }
+  
+  // 💡 新增總合計行
+  foot.innerHTML = `
+    <tr class="total-row">
+      <td data-label="項目">總填答人數</td>
+      <td data-label="合計">${data.length} 人</td>
+      <td class="desktop-only" style="text-align:right;">100%</td>
+    </tr>`;
 }
 
 function renderTable(data) {
@@ -135,7 +148,7 @@ function renderTable(data) {
   body.innerHTML = '';
   data.forEach(r => {
     const d = formatDate(r.date);
-    const typeKey = r.resultType.slice(-1); // 取得 A, B, C 或 D
+    const typeKey = r.resultType.slice(-1); 
     body.innerHTML += `
       <tr>
         <td data-label="日期">${d}</td>
