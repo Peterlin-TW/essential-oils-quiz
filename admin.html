@@ -2,250 +2,104 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>精油探索 - 數據分析後台</title>
+  <title>管理分析後台 - 香氣覺察</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
-
-    body {
-      background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%);
-      min-height: 100vh;
-      color: #3b2f2f;
-      padding: 40px 20px;
-    }
-
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    header { text-align: center; margin-bottom: 40px; }
-    header h1 { font-size: 2.2rem; color: #5c4a3c; letter-spacing: 2px; margin-bottom: 10px; }
-    header p { color: #8d7a6b; font-size: 1.1rem; }
-
-    .glass-card {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(15px);
-      border-radius: 28px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      margin-bottom: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-    }
-
-    .controls { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
-    input[type="date"] { padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(125, 107, 93, 0.2); background: rgba(255, 255, 255, 0.9); outline: none; }
-
-    .btn-update {
-      background: linear-gradient(90deg, #ff9a62, #ffb74d);
-      color: white; border: none; padding: 12px 28px; border-radius: 999px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(255, 154, 98, 0.3);
-    }
-
-    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .stat-card { background: white; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.04); }
-    .stat-card h3 { font-size: 0.85rem; color: #a39382; margin-bottom: 12px; letter-spacing: 1px; }
-    .stat-card p { font-size: 1.6rem; font-weight: 700; color: #ff9a62; }
-
-    /* 💡 雙欄版面：左統計表格 / 右圖表 */
-    .analysis-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-bottom: 30px; }
-    @media (max-width: 900px) { .analysis-grid { grid-template-columns: 1fr; } }
-
-    .table-box { width: 100%; overflow-x: auto; }
-    table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-    th { padding: 12px 20px; text-align: left; font-size: 0.85rem; color: #a39382; font-weight: 500; }
-    td { padding: 16px 20px; background: white; font-size: 0.95rem; }
-    td:first-child { border-radius: 16px 0 0 16px; }
-    td:last-child { border-radius: 0 16px 16px 0; }
-
-    /* 💡 精油合計表的數字強調 */
-    .count-badge { background: #fff3eb; color: #ff9a62; padding: 4px 12px; border-radius: 8px; font-weight: 700; }
-
-    .tag { padding: 6px 12px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; color: white; }
-    .tag-a { background: #ff9a62; }
-    .tag-b { background: #7d6b5d; }
-    .tag-c { background: #ffcc80; color: #3b2f2f; }
-
-    .animate-in { animation: fadeIn 0.6s ease forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    body { background: #f4f7f6; font-family: sans-serif; padding: 30px; color: #333; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    .tag { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; color: white; }
+    .tag-a { background: #ff9a62; } .tag-b { background: #7d6b5d; } .tag-c { background: #ffcc80; color: #333; } .tag-d { background: #a2d2ff; color: #333; }
+    .count-badge { background: #fff3eb; color: #ff9a62; padding: 2px 8px; border-radius: 5px; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <header>
-    <h1>管理分析後台</h1>
-    <p>數據同步與顧客意向追蹤</p>
-  </header>
-
-  <div class="glass-card controls animate-in">
-    <label>指定期間</label>
-    <input type="date" id="startDate">
-    <span style="color: #a39382">至</span>
-    <input type="date" id="endDate">
-    <button class="btn-update" onclick="fetchData()">更新數據分析</button>
+  <h1>分析後台</h1>
+  
+  <div class="card">
+    <canvas id="typeChart" style="max-height: 300px;"></canvas>
   </div>
 
-  <div class="summary-grid animate-in" style="animation-delay: 0.1s">
-    <div class="stat-card"><h3>篩選人數</h3><p id="totalCount">0 人</p></div>
-    <div class="stat-card"><h3>最受歡迎類型</h3><p id="topType">-</p></div>
-    <div class="stat-card"><h3>熱門產品點擊</h3><p id="topProduct">-</p></div>
+  <div class="card">
+    <h3>精油備貨合計表</h3>
+    <table id="stockTable">
+      <thead><tr><th>精油名稱</th><th>需求次數</th></tr></thead>
+      <tbody></tbody>
+    </table>
   </div>
 
-  <div class="analysis-grid">
-    <div class="glass-card animate-in" style="animation-delay: 0.2s">
-      <h2 style="margin-bottom: 20px; font-size: 1.1rem; color: #5c4a3c;">精油備貨合計表</h2>
-      <div class="table-box">
-        <table>
-          <thead>
-            <tr>
-              <th>精油名稱</th>
-              <th>點選總數</th>
-              <th>熱度比重</th>
-            </tr>
-          </thead>
-          <tbody id="stockTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="glass-card animate-in" style="animation-delay: 0.3s">
-      <h2 style="margin-bottom: 20px; font-size: 1.1rem; color: #5c4a3c; text-align: center;">類型佔比圖</h2>
-      <div style="position: relative; height: 300px;">
-        <canvas id="resultChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="glass-card animate-in" style="animation-delay: 0.4s">
-    <h2 style="margin-bottom: 20px; font-size: 1.1rem; color: #5c4a3c;">詳細填答名單</h2>
-    <div class="table-box">
-      <table>
-        <thead>
-          <tr>
-            <th>姓名 / 資訊</th>
-            <th>測驗結果</th>
-            <th>選擇細項</th>
-          </tr>
-        </thead>
-        <tbody id="memberTable"></tbody>
-      </table>
-    </div>
+  <div class="card">
+    <h3>詳細填答清單</h3>
+    <table id="memberTable">
+      <thead><tr><th>姓名/資訊</th><th>結果</th><th>建議精油</th></tr></thead>
+      <tbody></tbody>
+    </table>
   </div>
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec?type=admin";
-
+  const API_URL = "您的GAS部署網址?type=admin";
   const typeMap = {
-    'TypeA': { name: '舒壓放鬆', class: 'tag-a' },
-    'TypeB': { name: '能量扎根', class: 'tag-b' },
-    'TypeC': { name: '動力喚醒', class: 'tag-c' }
+    'TypeA': { name: '黃金能量', class: 'tag-a' },
+    'TypeB': { name: '幸福光芒', class: 'tag-b' },
+    'TypeC': { name: '沉靜心流', class: 'tag-c' },
+    'TypeD': { name: '自信綻放', class: 'tag-d' }
   };
 
-  let myChart = null;
-  let allRawData = [];
-
-  window.onload = () => {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
-    document.getElementById('endDate').value = today.toISOString().split('T')[0];
-    fetchData();
-  };
-
-  async function fetchData() {
-    try {
-      const response = await fetch(API_URL);
-      allRawData = await response.json();
-      applyFilterAndRender();
-    } catch (err) { console.error(err); }
+  async function loadData() {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    render(data.reverse());
   }
 
-  function applyFilterAndRender() {
-    const start = new Date(document.getElementById('startDate').value);
-    const end = new Date(document.getElementById('endDate').value);
-    end.setHours(23, 59, 59, 999);
-
-    const filtered = allRawData.filter(item => {
-      const itemDate = new Date(item.date);
-      return itemDate >= start && itemDate <= end;
-    }).reverse();
-
-    renderDashboard(filtered);
-  }
-
-  function renderDashboard(data) {
-    const typeCounts = { 'TypeA': 0, 'TypeB': 0, 'TypeC': 0 };
-    const productCounts = {};
-    const memberTable = document.getElementById('memberTable');
-    const stockTable = document.getElementById('stockTable');
-    
-    memberTable.innerHTML = '';
-    stockTable.innerHTML = '';
+  function render(data) {
+    const typeCounts = { TypeA:0, TypeB:0, TypeC:0, TypeD:0 };
+    const stockCounts = {};
+    const memberBody = document.querySelector('#memberTable tbody');
+    const stockBody = document.querySelector('#stockTable tbody');
 
     data.forEach(item => {
-      if (typeCounts.hasOwnProperty(item.resultType)) typeCounts[item.resultType]++;
-      if (item.selectedProducts) {
-        item.selectedProducts.split(', ').forEach(p => {
-          if (p && p !== "無" && p !== "未選擇") {
-            productCounts[p] = (productCounts[p] || 0) + 1;
-          }
+      typeCounts[item.resultType]++;
+      // 統計精油
+      if(item.selectedProducts) {
+        item.selectedProducts.split('、').forEach(p => {
+          stockCounts[p] = (stockCounts[p] || 0) + 1;
         });
       }
-
-      const typeInfo = typeMap[item.resultType] || { name: item.resultType, class: '' };
-      memberTable.innerHTML += `
+      // 渲染清單
+      const info = typeMap[item.resultType] || { name: item.resultType, class: '' };
+      memberBody.innerHTML += `
         <tr>
-          <td>
-            <div style="font-weight:700;">${item.name}</div>
-            <div style="font-size:0.75rem; color:#a39382; margin-top:4px;">${item.contact} · ${new Date(item.date).toLocaleDateString()}</div>
-          </td>
-          <td><span class="tag ${typeInfo.class}">${typeInfo.name}</span></td>
-          <td style="font-size:0.85rem; color:#666;">${item.selectedProducts || '未選擇'}</td>
+          <td><b>${item.name}</b><br><small>${item.contact}</small></td>
+          <td><span class="tag ${info.class}">${info.name}</span></td>
+          <td>${item.selectedProducts}</td>
         </tr>
       `;
     });
 
-    // 💡 渲染合計統計表
-    const sortedProducts = Object.entries(productCounts).sort((a, b) => b[1] - a[1]);
-    sortedProducts.forEach(([name, count]) => {
-      const percentage = data.length > 0 ? Math.round((count / data.length) * 100) : 0;
-      stockTable.innerHTML += `
-        <tr>
-          <td style="font-weight:500; color:#5c4a3c;">${name}</td>
-          <td><span class="count-badge">${count} 份</span></td>
-          <td style="color:#a39382; font-size:0.85rem;">${percentage}% 的人選擇</td>
-        </tr>
-      `;
+    // 渲染合計表
+    Object.entries(stockCounts).sort((a,b)=>b[1]-a[1]).forEach(([name, count]) => {
+      stockBody.innerHTML += `<tr><td>${name}</td><td><span class="count-badge">${count}</span></td></tr>`;
     });
 
-    document.getElementById('totalCount').innerText = data.length + " 人";
-    const topT = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
-    document.getElementById('topType').innerText = data.length > 0 ? (typeMap[topT] ? typeMap[topT].name : topT) : "-";
-    document.getElementById('topProduct').innerText = sortedProducts[0] ? sortedProducts[0][0] : "無";
-
-    updateChart(typeCounts);
-  }
-
-  function updateChart(counts) {
-    const ctx = document.getElementById('resultChart').getContext('2d');
-    if (myChart) myChart.destroy();
-    myChart = new Chart(ctx, {
+    // 圓餅圖
+    new Chart(document.getElementById('typeChart'), {
       type: 'pie',
       data: {
-        labels: ['舒壓放鬆', '能量扎根', '動力喚醒'],
+        labels: ['黃金能量', '幸福光芒', '沉靜心流', '自信綻放'],
         datasets: [{
-          data: [counts.TypeA, counts.TypeB, counts.TypeC],
-          backgroundColor: ['#ff9a62', '#7d6b5d', '#ffcc80'],
-          borderWidth: 0
+          data: [typeCounts.TypeA, typeCounts.TypeB, typeCounts.TypeC, typeCounts.TypeD],
+          backgroundColor: ['#ff9a62', '#7d6b5d', '#ffcc80', '#a2d2ff']
         }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } }
       }
     });
   }
+
+  loadData();
 </script>
 
 </body>

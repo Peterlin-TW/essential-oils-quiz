@@ -3,315 +3,183 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>芳香精油探索旅程</title>
+  <title>專屬香氣覺察：課前身心狀態問卷</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    /* 基礎樣式 */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
-    body { 
-      background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%); 
-      min-height: 100vh; 
-      color: #3b2f2f; 
-      -webkit-user-select: none; user-select: none; /* 防止文字被隨意複製 */
-    }
-    
-    .hero { position: relative; height: 320px; background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop'); background-size: cover; background-position: center; display: flex; align-items: end; padding: 24px; }
+    body { background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%); min-height: 100vh; color: #3b2f2f; -webkit-user-select: none; user-select: none; }
+    .hero { position: relative; height: 280px; background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop'); background-size: cover; background-position: center; display: flex; align-items: end; padding: 24px; }
     .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); }
     .hero-content { position: relative; z-index: 2; color: white; }
-    
     .container { max-width: 500px; margin: -40px auto 40px; position: relative; z-index: 5; padding: 0 16px; }
-    .card { background: rgba(255,255,255,0.88); backdrop-filter: blur(10px); border-radius: 28px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); animation: fadeIn 0.5s ease; }
+    .card { background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 28px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
     
-    /* 進度條 */
-    .progress-wrap { margin-bottom: 24px; }
-    .progress-text { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; color: #7d6b5d; }
-    .progress-bar { width: 100%; height: 10px; background: #eee; border-radius: 999px; overflow: hidden; }
-    .progress { height: 100%; width: 0; background: linear-gradient(90deg, #ff9a62, #ffcc80); transition: width 0.4s ease; }
-    
-    /* 題目圖片 */
-    .question-image { width: 100%; height: 220px; border-radius: 20px; object-fit: cover; margin-bottom: 24px; pointer-events: none; }
-    .question { font-size: 1.4rem; line-height: 1.5; margin-bottom: 24px; font-weight: 700; }
-    .answers { display: flex; flex-direction: column; gap: 14px; }
-    .answer-btn { border: none; background: white; border-radius: 18px; padding: 18px; text-align: left; font-size: 1rem; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .answer-btn:hover { transform: translateY(-3px); background: #fff3eb; }
+    .loading-state { text-align: center; padding: 60px 20px; }
+    .oil-drip { width: 16px; height: 16px; background: #ff9a62; border-radius: 50% 0 50% 50%; transform: rotate(45deg); margin: 0 auto 20px; animation: drip 1.2s infinite ease-in; }
+    @keyframes drip { 0% { transform: translateY(-20px) rotate(45deg); opacity:0; } 50% { opacity:1; } 100% { transform: translateY(30px) rotate(45deg); opacity:0; } }
 
-    /* 結果圖片網格 */
-    .result { text-align: center; }
-    .result h2 { font-size: 1.8rem; margin-bottom: 15px; color: #5c4a3c; }
+    .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+    .progress { height: 100%; width: 0; background: #ff9a62; transition: width 0.4s; }
     
-    .image-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
-    .image-grid img { 
-      width: calc(48% - 12px); max-width: 160px; height: 110px; 
-      object-fit: cover; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-      cursor: pointer; border: 4px solid transparent; transition: all 0.3s ease; 
-      -webkit-user-drag: none; /* 防止圖片被拖拽 */
-    }
-    
-    /* 💡 滑鼠指過去的效果 */
-    .image-grid img:hover { transform: scale(1.05); border-color: rgba(255, 154, 98, 0.3); }
-    .image-grid img.selected { border-color: #ff9a62; transform: scale(1.05); box-shadow: 0 6px 15px rgba(255, 154, 98, 0.4); }
+    .question { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; line-height: 1.6; }
+    .answers { display: flex; flex-direction: column; gap: 12px; }
+    .answer-btn { border: none; background: white; border-radius: 14px; padding: 16px; text-align: left; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .answer-btn:hover { background: #fff3eb; }
 
-    .result p { line-height: 1.8; color: #5c4a3c; margin-bottom: 20px; font-size: 1rem; }
-
-    /* 表單與防呆 */
-    #countTip { font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; transition: color 0.3s; }
-    .form-group { margin-top: 25px; padding: 20px; background: rgba(255, 154, 98, 0.1); border-radius: 20px; text-align: left; }
-    .form-group h3 { font-size: 1rem; margin-bottom: 15px; text-align: center; color: #3b2f2f; }
-    .form-group input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; }
-    .form-group input:focus { border-color: #ff9a62; }
+    .result-img-grid { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+    .result-img-grid img { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     
-    .submit-btn { background: #ccc; color: white; border: none; padding: 14px; width: 100%; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: default; transition: all 0.3s; }
-    .submit-btn.ready { background: #3b2f2f; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 47, 47, 0.3); }
-    
-    .restart-btn { background: transparent; color: #7d6b5d; border: none; margin-top: 15px; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+    .form-group { margin-top: 25px; padding: 20px; background: rgba(255,154,98,0.1); border-radius: 20px; }
+    input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
+    .submit-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
 
-    .loading-state { text-align: center; padding: 40px 20px; }
-    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #ff9a62; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
     .hidden { display: none !important; }
-
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
-  <section class="hero">
-    <div class="hero-content">
-      <h1>芳香精油探索旅程</h1>
-      <p>您的專屬療癒配方建議</p>
-    </div>
-  </section>
+  <section class="hero"><div class="hero-content"><h1>香氣覺察體驗</h1><p>尋找您的命定配方</p></div></section>
 
   <div class="container">
     <div class="card">
-      <div id="loadingState" class="loading-state">
-        <div class="spinner"></div>
-        <p>正在載入您的療癒題目...</p>
-      </div>
+      <div id="loadingState" class="loading-state"><div class="oil-drip"></div><p>正在萃取香氣題目...</p></div>
 
       <div id="quizContent" class="hidden">
-        <div class="progress-wrap">
-          <div class="progress-text"><span id="stepText"></span><span id="percentText"></span></div>
-          <div class="progress-bar"><div class="progress" id="progress"></div></div>
-        </div>
-        <img id="questionImage" class="question-image" src="">
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
         <div id="question" class="question"></div>
         <div id="answers" class="answers"></div>
       </div>
 
-      <div class="result hidden" id="result">
-        <h2 id="resultTitle">您的專屬結果</h2>
-        <p id="resultDesc"></p>
-
-        <div id="imageContainer" class="image-grid"></div>
-
-        <div class="form-group" id="dataForm">
-          <h3>留下資訊，獲取專屬處方箋</h3>
-          <p id="countTip" style="color: #d9534f; text-align: center;">💡 請在上方挑選至少 3 個產品 (0/3)</p>
-          
-          <input type="text" id="userName" placeholder="您的姓名">
-          <input type="text" id="userContact" placeholder="電話或 Line ID">
-          
-          <button class="submit-btn" id="submitBtn" onclick="sendDataToGoogle()" disabled>請先選足 3 個產品</button>
-          <p id="statusMsg" style="text-align:center; margin-top:8px; font-size:0.85rem;"></p>
+      <div id="result" class="hidden">
+        <h2 id="resultTitle" style="color:#5c4a3c; text-align:center;"></h2>
+        <div id="imageContainer" class="result-img-grid"></div>
+        <p id="resultDesc" style="font-size:0.95rem; line-height:1.7; color:#666; margin-bottom:20px;"></p>
+        
+        <div class="form-group">
+          <input type="text" id="userName" placeholder="姓名">
+          <input type="text" id="userContact" placeholder="Line ID / 電話">
+          <button id="submitBtn" class="submit-btn" onclick="sendData()">送出問卷並預約諮詢</button>
+          <p id="statusMsg" style="text-align:center; margin-top:10px; font-size:0.85rem;"></p>
         </div>
-
-        <button class="restart-btn" onclick="restartQuiz()">重新測驗</button>
       </div>
     </div>
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
+    const API_URL = "您的GAS部署網址";
 
     const resultOutcomes = {
       TypeA: {
-        title: '舒壓放鬆：海洋與花香調',
-        productNames: ['薰衣草精油', '甜橙精油', '羅馬洋甘菊', '舒眠複方'], 
-        images: [
-          'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400',
-          'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=400',
-          'https://images.unsplash.com/photo-1611080541599-8c6dbde6ed28?w=400',
-          'https://images.unsplash.com/photo-1544161515-4af6b1d4640b?w=400'
-        ],
-        desc: '您目前需要溫柔的呵護。建議使用薰衣草、羅馬洋甘菊及苦橙葉。這組配方能幫助您放下焦慮，進入深度放鬆。'
+        title: '黃金能量香水',
+        names: '檀香、葡萄柚、依蘭',
+        images: ['https://images.unsplash.com/photo-1612217433315-0624637d320c?w=150','https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=150','https://images.unsplash.com/photo-1596003906949-67221c37965c?w=150'],
+        desc: '您現在最需要的是「提振」與「找回力量」。檀香提供穩定氣場，結合葡萄柚明亮果香，能掃除腦中陰霾，重拾行動力。'
       },
       TypeB: {
-        title: '能量扎根：木質與土質調',
-        productNames: ['雪松精油', '乳香精油', '岩蘭草', '大地複方'],
-        images: [
-          'https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=400',
-          'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?w=400',
-          'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
-          'https://images.unsplash.com/photo-1595981267035-7b04ca84a82d?w=400'
-        ],
-        desc: '您需要尋找內心的力量。建議使用雪松、乳香及岩蘭草。木質香氣能為您帶來穩定的支撐感，讓情緒不再漂浮。'
+        title: '幸福光芒香水',
+        names: '柳橙、薰衣草、玫瑰、廣藿香',
+        images: ['https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=150','https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=150','https://images.unsplash.com/photo-1559563458-527698bf5295?w=150','https://images.unsplash.com/photo-1595981267035-7b04ca84a82d?w=150'],
+        desc: '您近期的心靈渴望被溫柔接住。玫瑰能帶來愉悅感，搭配薰衣草能安撫過度敏感的神經，讓您感受到被愛包圍。'
       },
       TypeC: {
-        title: '動力喚醒：柑橘與辛香調',
-        productNames: ['檸檬精油', '野橘精油', '薄荷精油', '專注複方'],
-        images: [
-          'https://images.unsplash.com/photo-1557800636-894a64c1696f?w=400',
-          'https://images.unsplash.com/photo-1524222717473-730000096953?w=400',
-          'https://images.unsplash.com/photo-1523450001312-daa4e2e1ba99?w=400',
-          'https://images.unsplash.com/photo-1596003906949-67221c37965c?w=400'
-        ],
-        desc: '現在是重拾活力的時刻！建議使用檸檬、野橘及薄荷。清新的柑橘香能掃除疲憊，為您的生活注入新的動力與自信。'
+        title: '沉靜心流香水',
+        names: '佛手柑、真正薰衣草、雪松',
+        images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1595928642581-f50f4f3453a5?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'],
+        desc: '您目前最需要的是「卸下重擔」與「深層歸零」。佛手柑能疏通鬱結，搭配雪松的森林氣息，幫助您放鬆深層壓力。'
+      },
+      TypeD: {
+        title: '自信綻放香水',
+        names: '佛手柑、花梨木、雪松',
+        images: ['https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=150','https://images.unsplash.com/photo-1602928321679-560bb453f190?w=150','https://images.unsplash.com/photo-1541944743827-e04bb645f946?w=150'],
+        desc: '您現在需要清晰的表達力與自信。花梨木溫暖的力量能穩定思緒，雪松則帶來堅定的底氣，讓您無畏地面對挑戰。'
       }
     };
 
-    let questions = []; 
+    let questions = [];
     let current = 0;
-    let scores = {};
+    let scores = { TypeA:0, TypeB:0, TypeC:0, TypeD:0 };
     let finalKey = "";
-    let selectedProducts = [];
 
-    async function fetchQuestions() {
+    async function init() {
+      const cache = localStorage.getItem('aroma_cache');
+      if(cache) { questions = JSON.parse(cache); start(); }
       try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        if(data && data.length > 0) { questions = data; }
-      } catch (e) {
-        questions = [{q:'讀取失敗，請重新整理頁面', image:'', answers:[]}];
-      } finally {
-        document.getElementById('loadingState').classList.add('hidden');
-        document.getElementById('quizContent').classList.remove('hidden');
-        initScores();
-        renderQuestion();
-      }
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        if(data.length > 0) { 
+          questions = data; 
+          localStorage.setItem('aroma_cache', JSON.stringify(data));
+          if(!cache) start();
+        }
+      } catch(e) { if(!cache) alert("連線失敗"); }
     }
 
-    function initScores() {
-      scores = {};
-      Object.keys(resultOutcomes).forEach(k => scores[k] = 0);
+    function start() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('quizContent').classList.remove('hidden');
+      render();
     }
 
-    function renderQuestion() {
+    function render() {
       const q = questions[current];
       document.getElementById('question').innerText = q.q;
-      document.getElementById('questionImage').src = q.image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800';
-      const ansDiv = document.getElementById('answers');
-      ansDiv.innerHTML = '';
-
-      q.answers.filter(a => a.text).forEach(a => {
-        const b = document.createElement('button');
-        b.className = 'answer-btn';
-        b.innerText = a.text;
-        b.onclick = () => {
-          scores[a.value] = (scores[a.value] || 0) + 1;
+      const div = document.getElementById('answers');
+      div.innerHTML = '';
+      q.answers.forEach(a => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.innerText = a.text;
+        btn.onclick = () => {
+          scores[a.value]++;
           current++;
-          if (current >= questions.length) showResult(); else renderQuestion();
+          if(current < questions.length) render(); else show();
         };
-        ansDiv.appendChild(b);
+        div.appendChild(btn);
       });
-
-      const p = ((current + 1) / questions.length) * 100;
-      document.getElementById('progress').style.width = p + '%';
-      document.getElementById('stepText').innerText = `第 ${current+1} 題 / ${questions.length} 題`;
-      document.getElementById('percentText').innerText = Math.round(p) + '%';
+      document.getElementById('progress').style.width = ((current+1)/questions.length*100)+'%';
     }
 
-    function showResult() {
+    function show() {
       document.getElementById('quizContent').classList.add('hidden');
       finalKey = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-      const outcome = resultOutcomes[finalKey] || resultOutcomes['TypeA'];
-
-      document.getElementById('resultTitle').innerText = outcome.title;
-      document.getElementById('resultDesc').innerText = outcome.desc;
-
-      const container = document.getElementById('imageContainer');
-      container.innerHTML = '';
-      selectedProducts = []; 
-      updateStockStatus();
-
-      outcome.images.forEach((src, index) => {
+      const res = resultOutcomes[finalKey];
+      document.getElementById('resultTitle').innerText = res.title;
+      document.getElementById('resultDesc').innerText = res.desc;
+      const imgDiv = document.getElementById('imageContainer');
+      res.images.forEach(src => {
         const img = document.createElement('img');
         img.src = src;
-        const pName = outcome.productNames ? outcome.productNames[index] : `精油${index + 1}`;
-        
-        // 💡 核心：滑鼠懸停顯示產品名稱
-        img.title = pName;
-        img.dataset.productName = pName;
-        
-        img.onclick = function() {
-          this.classList.toggle('selected');
-          const name = this.dataset.productName;
-          if (this.classList.contains('selected')) {
-            selectedProducts.push(name);
-          } else {
-            selectedProducts = selectedProducts.filter(n => n !== name);
-          }
-          updateStockStatus();
-        };
-        container.appendChild(img);
+        imgDiv.appendChild(img);
       });
-
       document.getElementById('result').classList.remove('hidden');
     }
 
-    function updateStockStatus() {
-      const btn = document.getElementById('submitBtn');
-      const tip = document.getElementById('countTip');
-      const count = selectedProducts.length;
-
-      tip.innerText = `請在上方挑選至少 3 個產品 (${count}/3)`;
-      
-      if (count >= 3) {
-        btn.disabled = false;
-        btn.innerText = "確認送出資料";
-        btn.classList.add('ready');
-        tip.style.color = "#28a745";
-        tip.innerText = `已成功挑選 ${count} 個精油 ✅`;
-      } else {
-        btn.disabled = true;
-        btn.innerText = `還差 ${3 - count} 個精油才能送出`;
-        btn.classList.remove('ready');
-        tip.style.color = "#d9534f";
-      }
-    }
-
-    function sendDataToGoogle() {
+    function sendData() {
       const name = document.getElementById('userName').value;
       const contact = document.getElementById('userContact').value;
-      if (!name || !contact) { alert("請填寫姓名與聯絡資訊喔！"); return; }
-
+      if(!name || !contact) return alert("請填寫資料");
+      
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.innerText = "傳送中...";
-
+      
       fetch(API_URL, {
         method: 'POST',
         mode: 'no-cors',
         body: JSON.stringify({
-          name: name,
-          contact: contact,
+          name, contact,
           resultType: finalKey,
           resultTitle: resultOutcomes[finalKey].title,
-          selectedProducts: selectedProducts.join(', ')
+          selectedProducts: resultOutcomes[finalKey].names
         })
       }).then(() => {
-        document.getElementById('statusMsg').innerText = "✓ 資料已成功送出！老師會盡快為您診斷。";
-        btn.style.display = "none";
-        document.getElementById('countTip').style.display = "none";
+        document.getElementById('statusMsg').innerText = "✓ 成功提交，老師將會與您聯繫！";
+        btn.style.display = 'none';
       });
     }
 
-    function restartQuiz() {
-      current = 0;
-      initScores();
-      selectedProducts = [];
-      document.getElementById('userName').value = "";
-      document.getElementById('userContact').value = "";
-      document.getElementById('result').classList.add('hidden');
-      document.getElementById('quizContent').classList.remove('hidden');
-      document.getElementById('submitBtn').style.display = "block";
-      document.getElementById('submitBtn').classList.remove('ready');
-      document.getElementById('countTip').style.display = "block";
-      renderQuestion();
-    }
-
-    fetchQuestions();
+    window.onload = init;
   </script>
-
 </body>
 </html>
