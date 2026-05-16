@@ -20,13 +20,13 @@
     th { background: #5c4a3c; color: white; padding: 12px; text-align: left; font-size: 0.9rem; }
     td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
 
-    .tag { padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; display: inline-block; }
+    /* 🏷️ 顏色標籤樣式 */
+    .tag { padding: 5px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; display: inline-block; white-space: nowrap; }
     .tag-A { background: var(--bg-a); color: var(--color-a); }
     .tag-B { background: var(--bg-b); color: var(--color-b); }
     .tag-C { background: var(--bg-c); color: var(--color-c); }
     .tag-D { background: var(--bg-d); color: var(--color-d); }
 
-    /* 總計列樣式 */
     .total-row { background: #f8f9fa; font-weight: bold; color: #3b2f2f; border-top: 2px solid #5c4a3c; }
 
     @media (max-width: 768px) {
@@ -36,7 +36,7 @@
       td { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f9f9f9; padding: 12px 5px !important; }
       td::before { content: attr(data-label); font-weight: bold; color: #888; font-size: 0.85rem; }
       td:last-child { border-bottom: none; }
-      .total-row { border-top: none; background: #fffbe6; } /* 手機版總計特別色 */
+      .total-row { border-top: none; background: #fffbe6; }
     }
 
     input[type="date"] { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; width: 100%; margin: 8px 0; background: #fff; }
@@ -125,16 +125,17 @@ function updateStats(data) {
   
   for (let t in stats) {
     const pct = data.length ? (stats[t]/data.length*100).toFixed(1) : 0;
-    // 💡 這裡移除了顯示 TypeA 標籤，直接顯示名稱
+    const typeKey = t.slice(-1); // 取得 A, B, C, D
+    
+    // 💡 統計表的名稱也套用顏色標籤
     body.innerHTML += `
       <tr>
-        <td style="font-weight:bold; color:#5c4a3c;">${productInfo[t]}</td>
-        <td><strong>${stats[t]} 人</strong></td>
-        <td style="color:#888; font-size:0.8rem; text-align:right;">${pct}%</td>
+        <td data-label="配方名稱"><span class="tag tag-${typeKey}">${productInfo[t]}</span></td>
+        <td data-label="需求數量"><strong>${stats[t]} 人</strong></td>
+        <td class="desktop-only" style="color:#888; font-size:0.8rem; text-align:right;">${pct}%</td>
       </tr>`;
   }
   
-  // 💡 新增總合計行
   foot.innerHTML = `
     <tr class="total-row">
       <td data-label="項目">總填答人數</td>
