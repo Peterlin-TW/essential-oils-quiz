@@ -22,7 +22,6 @@
     .container { max-width: 500px; margin: 20px auto 40px; padding: 0 15px; position: relative; z-index: 5; }
     .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
     
-    /* 🎨 精油滴管載入動畫 */
     .loading-state { text-align: center; padding: 60px 0; }
     .oil-dropper { position: relative; width: 40px; height: 40px; margin: 0 auto 30px; }
     .oil-drop { 
@@ -42,7 +41,10 @@
     h3 { margin-bottom: 20px; color: #5c4a3c; font-size: 1.1rem; border-left: 4px solid #ff9a62; padding-left: 10px; }
     label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #7d6b5d; font-weight: bold; }
     input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; background: #fff; }
-    .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    
+    .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+    .btn { flex: 2; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .btn-back { flex: 1; background: #e0d5c8; color: #7d6b5d; }
     
     .question-image { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; display: none; }
     .result-main-img { width: 100%; height: auto; display: none; border-radius: 15px; margin: 10px 0 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -50,7 +52,6 @@
     .hidden { display: none !important; }
     .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .progress { height: 100%; width: 0; background: #ff9a62; transition: 0.4s; }
-    #resTitle { font-size: 1.4rem; color: #5c4a3c; margin-bottom: 15px; }
   </style>
 </head>
 <body>
@@ -61,9 +62,7 @@
   <div class="card">
     
     <div id="loadingState" class="loading-state">
-      <div class="oil-dropper">
-        <div class="oil-drop"></div>
-      </div>
+      <div class="oil-dropper"><div class="oil-drop"></div></div>
       <p id="loadingMsg" class="loading-text">正在為您調配香氣題目...</p>
     </div>
 
@@ -82,15 +81,18 @@
     <div id="step2" class="hidden">
       <h3>【第二部分】身心掃描</h3>
       <label>氣味的情感記憶</label><textarea id="smellMemory"></textarea>
-      <label>壓力指數 (1放鬆 - 10緊繃)</label>
+      <label>壓力指數 (1-10)</label>
       <select id="stressLevel">
         <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
       </select>
-      <label>疲憊指數 (1精神好 - 10耗竭)</label>
+      <label>疲憊指數 (1-10)</label>
       <select id="tiredLevel">
         <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
       </select>
-      <button class="btn" onclick="startQuiz()">開始測驗</button>
+      <div class="btn-group">
+        <button class="btn btn-back" onclick="backToStep1()">上一步</button>
+        <button class="btn" onclick="startQuiz()">開始測驗</button>
+      </div>
     </div>
 
     <div id="quiz" class="hidden">
@@ -98,10 +100,11 @@
       <img id="qImg" class="question-image" src="">
       <div id="qText" class="question" style="font-weight: bold; margin-bottom: 20px; line-height: 1.5;"></div>
       <div id="ansList"></div>
+      <button class="btn btn-back" onclick="prevQuestion()" style="width: 100%; margin-top: 10px;">上一步 / 返回修改資料</button>
     </div>
 
     <div id="result" class="hidden" style="text-align: center;">
-      <h2 id="resTitle"></h2>
+      <h2 id="resTitle" style="margin-bottom: 15px;"></h2>
       <img id="resMainImg" class="result-main-img" src="">
       <p id="resDesc" style="font-size: 0.95rem; line-height: 1.7; color: #666; margin-bottom: 20px; text-align: justify;"></p>
       <button id="finalBtn" class="btn" onclick="submitAll()">送出問卷並預約諮詢</button>
@@ -120,7 +123,7 @@ const resultOutcomes = {
   TypeD: { title: '自信綻放香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfcQse_eoj3HgXioYyjqPI_D6nQm3Z1svoyRPxYRcKof9Eth3T6tEovh_GjsmNLYatz4dGxsqn9YXlGmydUYfL7_6SoX3MNvLfsghmqOOgMxal36b8uAdkG3dZvlpxA7i4YVFg91PAiCmHL_jfPS0fMGmd00LTbz2B4vGglCN1RtkKJP8sEFINwpLIsp0/s16000/D.jpg', desc: '您需要清晰的表達力與穩定的自信。', names: '花梨木、雪松' }
 };
 
-let questions = [], current = 0, scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0}, mainData = {};
+let questions = [], current = 0, scoresHistory = [], scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0}, mainData = {};
 
 async function init() {
   try {
@@ -131,9 +134,13 @@ async function init() {
       document.getElementById('step1').classList.remove('hidden');
     }
   } catch (e) { 
-    document.getElementById('loadingMsg').innerText = "連線失敗，請檢查網路或重新整理。";
-    document.querySelector('.oil-drop').style.animation = "none";
+    document.getElementById('loadingMsg').innerText = "連線失敗";
   }
+}
+
+function backToStep1() {
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step1').classList.remove('hidden');
 }
 
 function toStep2() {
@@ -149,7 +156,22 @@ function startQuiz() {
   mainData.tiredLevel = document.getElementById('tiredLevel').value;
   document.getElementById('step2').classList.add('hidden');
   document.getElementById('quiz').classList.remove('hidden');
+  current = 0;
+  scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0};
+  scoresHistory = [];
   renderQ();
+}
+
+function prevQuestion() {
+  if (current > 0) {
+    current--;
+    scores = JSON.parse(JSON.stringify(scoresHistory.pop())); // 回復上一步分數
+    renderQ();
+  } else {
+    // 如果在第一題按上一步，回到 Step 2
+    document.getElementById('quiz').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+  }
 }
 
 function renderQ() {
@@ -163,7 +185,12 @@ function renderQ() {
     const b = document.createElement('button');
     b.className = 'ans-btn';
     b.innerText = a.text;
-    b.onclick = () => { scores[a.value]++; current++; if(current < questions.length) renderQ(); else showRes(); };
+    b.onclick = () => { 
+      scoresHistory.push(JSON.parse(JSON.stringify(scores))); // 記錄當前分數
+      scores[a.value]++; 
+      current++; 
+      if(current < questions.length) renderQ(); else showRes(); 
+    };
     list.appendChild(b);
   });
   document.getElementById('progress').style.width = ((current+1)/questions.length*100)+'%';
