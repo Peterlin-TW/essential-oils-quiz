@@ -8,33 +8,39 @@
   <meta property="og:title" content="專屬香氣覺察：尋找您的命定配方" />
   <meta property="og:description" content="只需一分鐘，透過直覺選出最適合您的專屬香氣。" />
   <meta property="og:image" content="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800" />
-  <meta property="og:type" content="website" />
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
     body { background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%); min-height: 100vh; color: #3b2f2f; }
-    .hero { height: 120px; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop') center/cover; display: flex; align-items: center; justify-content: center; position: relative; }
+    .hero { height: 100px; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop') center/cover; display: flex; align-items: center; justify-content: center; position: relative; }
     .hero::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.3); }
-    .hero h1 { color: white; z-index: 2; font-size: 1.4rem; letter-spacing: 2px; }
+    .hero h1 { color: white; z-index: 2; font-size: 1.3rem; letter-spacing: 2px; }
     .container { max-width: 500px; margin: 20px auto 40px; padding: 0 15px; position: relative; z-index: 5; }
     .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    
+    /* 載入動畫 */
     .loading-state { text-align: center; padding: 60px 0; }
     .oil-dropper { position: relative; width: 40px; height: 40px; margin: 0 auto 30px; }
     .oil-drop { width: 12px; height: 12px; background: #ff9a62; border-radius: 50% 0 50% 50%; transform: rotate(45deg); position: absolute; left: 50%; margin-left: -6px; animation: drip 1.5s infinite; }
     @keyframes drip { 0% { transform: translateY(-20px) rotate(45deg); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(40px) rotate(45deg); opacity: 0; } }
+    
     h3 { margin-bottom: 20px; color: #5c4a3c; font-size: 1.1rem; border-left: 4px solid #ff9a62; padding-left: 10px; }
     label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #7d6b5d; font-weight: bold; }
     input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; background: #fff; }
+    
     .btn-group { display: flex; gap: 10px; margin-top: 10px; }
     .btn { flex: 2; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; text-decoration: none; display: flex; align-items: center; justify-content: center; }
     .btn-back { flex: 1; background: #e0d5c8; color: #7d6b5d; }
-    .btn-line { background: #06C755; color: white; margin-top: 15px; display: none; font-size: 1rem; }
-    .btn-line:hover { background: #05b34c; }
-    .question-image { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; display: none; }
+    .btn-line { background: #06C755; color: white; margin-top: 15px; display: none; }
+    
+    /* 核心測驗文字樣式優化 */
+    #qText { font-size: 1.15rem; color: #5c4a3c; line-height: 1.6; margin: 10px 0 25px; min-height: 60px; display: flex; align-items: center; }
+    .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 12px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; line-height: 1.4; transition: 0.2s; border: 1px solid transparent; }
+    .ans-btn:active { background: #fdfaf7; border-color: #ff9a62; }
+
     .result-main-img { width: 100%; height: auto; display: none; border-radius: 15px; margin: 10px 0 10px; }
     .share-hint { font-size: 0.8rem; color: #aaa; margin-bottom: 20px; }
-    .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 10px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; line-height: 1.4; }
     .hidden { display: none !important; }
     .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .progress { height: 100%; width: 0; background: #ff9a62; transition: 0.4s; }
@@ -72,8 +78,7 @@
 
     <div id="quiz" class="hidden">
       <div class="progress-bar"><div class="progress" id="progress"></div></div>
-      <img id="qImg" class="question-image" src="">
-      <div id="qText" style="font-weight: bold; margin-bottom: 20px;"></div>
+      <div id="qText"></div>
       <div id="ansList"></div>
       <button class="btn btn-back" onclick="prevQuestion()" style="width: 100%; margin-top: 10px;">上一步</button>
     </div>
@@ -83,13 +88,8 @@
       <p class="share-hint">長按圖片可儲存結果，分享給好友喔！</p>
       <img id="resMainImg" class="result-main-img" src="">
       <p id="resDesc" style="font-size: 0.95rem; line-height: 1.7; color: #666; margin-bottom: 20px; text-align: justify;"></p>
-      
       <button id="finalBtn" class="btn" onclick="submitAll()">送出問卷並預約諮詢</button>
-      
-      <a id="lineCommunityBtn" href="https://line.me/R/ti/g/vJJxz2eBds" target="_blank" class="btn btn-line">
-        加入香氣覺察交流社群
-      </a>
-      
+      <a id="lineCommunityBtn" href="https://line.me/R/ti/g/vJJxz2eBds" target="_blank" class="btn btn-line">加入香氣覺察交流社群</a>
       <p id="status" style="margin-top: 15px; font-size: 0.9rem; color: #ff9a62; font-weight: bold;"></p>
     </div>
   </div>
@@ -131,8 +131,6 @@ function prevQuestion() { if(current>0){ current--; scores = JSON.parse(JSON.str
 
 function renderQ() {
   const q = questions[current];
-  const qImg = document.getElementById('qImg');
-  if (q.image) { qImg.src = q.image; qImg.style.display = 'block'; } else { qImg.style.display = 'none'; }
   document.getElementById('qText').innerText = q.q;
   const list = document.getElementById('ansList'); list.innerHTML = '';
   q.answers.forEach(a => {
@@ -160,9 +158,8 @@ async function submitAll() {
   const outcome = resultOutcomes[mainData.resultType];
   const payload = { ...mainData, resultTitle: outcome.title, selectedProducts: outcome.names };
   await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-  
   btn.style.display = 'none';
-  document.getElementById('status').innerText = "✓ 預約諮詢資料已送出！歡迎加入社群與我們交流：";
+  document.getElementById('status').innerText = "✓ 預約諮詢資料已送出！歡迎加入社群：";
   document.getElementById('lineCommunityBtn').style.display = 'flex';
 }
 
