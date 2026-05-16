@@ -2,58 +2,112 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>芳療諮詢後台</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>芳療問卷 - 管理後台</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-    .card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-    .tag { padding: 3px 8px; border-radius: 5px; font-size: 0.75rem; color: white; }
-    .TypeA { background: #ff9a62; } .TypeB { background: #e5989b; } .TypeC { background: #829ab1; } .TypeD { background: #b19cd9; }
+    body { font-family: 'Noto Sans TC', sans-serif; background: #fdfaf7; padding: 20px; color: #444; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .filter-box { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+    input[type="date"] { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    th { background: #5c4a3c; color: white; padding: 12px; text-align: left; font-size: 0.9rem; }
+    td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.85rem; vertical-align: top; }
+    tr:hover { background: #fffcf9; }
+    .tag { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .tag-A { background: #fff4e6; color: #d9480f; }
+    .tag-B { background: #f3f0ff; color: #5f3dc4; }
+    .tag-C { background: #ebfbee; color: #2b8a3e; }
+    .tag-D { background: #e7f5ff; color: #1971c2; }
+    .loading { text-align: center; padding: 50px; color: #999; }
   </style>
 </head>
 <body>
-  <h1>芳療問卷數據總覽</h1>
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-    <div class="card"><canvas id="pieChart"></canvas></div>
-    <div class="card"><h3>精油備貨統計</h3><div id="stockList"></div></div>
-  </div>
-  <div class="card">
-    <h3>完整客戶名單</h3>
-    <table>
-      <thead><tr><th>時間</th><th>姓名</th><th>年齡/職業</th><th>壓力</th><th>測驗結果</th><th>情感記憶</th></tr></thead>
-      <tbody id="list"></tbody>
-    </table>
-  </div>
+
+<div class="header">
+  <h2>問卷填答記錄</h2>
+  <button onclick="fetchData()" style="padding: 8px 16px; cursor:pointer;">重新整理</button>
+</div>
+
+<div class="filter-box">
+  <label><strong>日期篩選：</strong></label>
+  <input type="date" id="filterDate" onchange="applyFilter()">
+  <button onclick="resetFilter()" style="background:none; border:none; color:#999; cursor:pointer; text-decoration:underline;">清除篩選</button>
+  <span id="countMsg" style="margin-left: auto; font-size: 0.9rem; color: #666;"></span>
+</div>
+
+<div id="loading" class="loading">正在讀取雲端資料...</div>
+
+<table id="adminTable" class="hidden">
+  <thead>
+    <tr>
+      <th>填答日期</th>
+      <th>姓名</th>
+      <th>身心指標</th>
+      <th>測驗結果</th>
+      <th>建議配方</th>
+    </tr>
+  </thead>
+  <tbody id="adminBody"></tbody>
+</table>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec?type=admin";
-  
-  async function load() {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    const typeCount = {TypeA:0, TypeB:0, TypeC:0, TypeD:0};
-    const list = document.getElementById('list');
-    
-    data.reverse().forEach(d => {
-      typeCount[d.resultType]++;
-      list.innerHTML += `<tr>
-        <td>${d.date.split(' ')[0]}</td>
-        <td><b>${d.name}</b><br>${d.contact || ''}</td>
-        <td>${d.age} / ${d.job}</td>
-        <td>🔥 ${d.stressLevel || d.stressLevel}</td>
-        <td><span class="tag ${d.resultType}">${d.resultTitle}</span></td>
-        <td style="font-size:0.8rem; color:#666;">${d.smellMemory || '-'}</td>
-      </tr>`;
-    });
+const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec?type=admin";
+let allData = [];
 
-    new Chart(document.getElementById('pieChart'), {
-      type: 'pie',
-      data: { labels: ['能量', '幸福', '沉靜', '自信'], datasets: [{ data: Object.values(typeCount), backgroundColor: ['#ff9a62', '#e5989b', '#829ab1', '#b19cd9'] }] }
-    });
+async function fetchData() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('adminTable').style.display = 'none';
+  try {
+    const res = await fetch(API_URL);
+    allData = await res.json();
+    renderTable(allData);
+  } catch (e) {
+    document.getElementById('loading').innerText = "資料讀取失敗";
   }
-  load();
+}
+
+function renderTable(data) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('adminTable').style.display = 'table';
+  const body = document.getElementById('adminBody');
+  body.innerHTML = '';
+  
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space:nowrap;">${row.date.split(' ')[0]}<br><small style="color:#999">${row.date.split(' ')[1] || ''}</small></td>
+      <td><strong>${row.name}</strong><br><small>${row.gender} | ${row.age} | ${row.location}</small></td>
+      <td>
+        壓力：${row.stressLevel} / 10<br>
+        疲憊：${row.tiredLevel} / 10
+      </td>
+      <td><span class="tag tag-${row.resultType.slice(-1)}">${row.resultTitle}</span></td>
+      <td style="max-width:200px;">${row.selectedProducts}</td>
+    `;
+    body.appendChild(tr);
+  });
+  document.getElementById('countMsg').innerText = `共 ${data.length} 筆資料`;
+}
+
+// 💡 日期篩選邏輯
+function applyFilter() {
+  const selectedDate = document.getElementById('filterDate').value; // 格式 yyyy-mm-dd
+  if (!selectedDate) return;
+
+  const filtered = allData.filter(row => {
+    // 將 row.date (yyyy-MM-dd HH:mm:ss) 轉為 yyyy-mm-dd 進行比對
+    const rowDateStr = row.date.split(' ')[0]; 
+    return rowDateStr === selectedDate;
+  });
+  renderTable(filtered);
+}
+
+function resetFilter() {
+  document.getElementById('filterDate').value = '';
+  renderTable(allData);
+}
+
+window.onload = fetchData;
 </script>
 </body>
 </html>
