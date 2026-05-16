@@ -8,23 +8,30 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
     body { background: linear-gradient(180deg, #f6efe7 0%, #e9d9c6 100%); min-height: 100vh; color: #3b2f2f; }
-    .hero { height: 200px; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop') center/cover; display: flex; align-items: flex-end; padding: 20px; position: relative; }
+    .hero { height: 160px; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop') center/cover; display: flex; align-items: flex-end; padding: 20px; position: relative; }
     .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5), transparent); }
     .hero h1 { color: white; z-index: 2; font-size: 1.5rem; }
     .container { max-width: 500px; margin: -30px auto 40px; padding: 0 15px; position: relative; z-index: 5; }
-    .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    
+    /* 載入動畫樣式 */
+    .loading-state { text-align: center; padding: 40px 0; }
+    .oil-drip { width: 16px; height: 16px; background: #ff9a62; border-radius: 50% 0 50% 50%; transform: rotate(45deg); margin: 0 auto 20px; animation: drip 1.2s infinite ease-in; }
+    @keyframes drip { 0% { transform: translateY(-20px) rotate(45deg); opacity:0; } 50% { opacity:1; } 100% { transform: translateY(30px) rotate(45deg); opacity:0; } }
+
     h3 { margin-bottom: 20px; color: #5c4a3c; font-size: 1.1rem; border-left: 4px solid #ff9a62; padding-left: 10px; }
     label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #7d6b5d; font-weight: bold; }
     input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; outline: none; }
     .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #3b2f2f; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    .question-image { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; }
+    
+    /* 核心修正：預設不顯示圖片，避免破圖 */
+    .question-image { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 20px; display: none; }
+    .result-main-img { width: calc(100% + 10px); margin-left: -5px; height: auto; display: none; border-radius: 15px; margin-bottom: 20px; }
+
     .ans-btn { width: 100%; padding: 16px; border: none; background: white; border-radius: 12px; margin-bottom: 10px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; }
     .hidden { display: none !important; }
     .progress-bar { width: 100%; height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
     .progress { height: 100%; width: 0; background: #ff9a62; transition: 0.4s; }
-    
-    /* 結果大圖樣式 */
-    .result-main-img { width: 100%; height: auto; min-height: 250px; object-fit: contain; border-radius: 20px; margin-bottom: 20px; background: #fff; }
   </style>
 </head>
 <body>
@@ -33,7 +40,13 @@
 
 <div class="container">
   <div class="card">
-    <div id="step1">
+    
+    <div id="loadingState" class="loading-state">
+      <div class="oil-drip"></div>
+      <p id="loadingMsg" style="color: #7d6b5d; font-weight: 500;">正在為您調配香氣題目...</p>
+    </div>
+
+    <div id="step1" class="hidden">
       <h3>【第一部分】基本資料</h3>
       <label>姓名</label><input type="text" id="name">
       <label>E-mail</label><input type="email" id="email">
@@ -57,7 +70,7 @@
 
     <div id="quiz" class="hidden">
       <div class="progress-bar"><div class="progress" id="progress"></div></div>
-      <img id="qImg" class="question-image" src="">
+      <img id="qImg" class="question-image" src="" alt="題目圖">
       <div id="qText" class="question" style="font-weight: bold; margin-bottom: 20px;"></div>
       <div id="ansList"></div>
     </div>
@@ -75,35 +88,27 @@
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec";
 
-// 💡 已經替換為您提供的 ABCD 指定圖片連結
 const resultOutcomes = {
-  TypeA: { 
-    title: '黃金能量香水', 
-    names: '檀香、葡萄柚、依蘭', 
-    mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxH6FgMFwmSUf8TwOPG5_w6QOi53dnsZegLIYDVugeMzsFG9swKj96Z6yw36b4sSjlwgtFXUIbYchBCcZd-a2AD-xC6MjId5Y_Dn3vz8vCm6hVzwo9KjR5S6Bx9nbqH1OZBDgAfgoSidMLq8y4GRQErJ2w9SMsCpTr0RvUs4ZlyQH7lL2BESz0cmN1g8E/s16000/A.jpg', 
-    desc: '您現在需要的是「提振」與「找回力量」。檀香穩定氣場，葡萄柚掃除腦中陰霾，重拾行動力。' 
-  },
-  TypeB: { 
-    title: '幸福光芒香水', 
-    names: '柳橙、薰衣草、玫瑰、廣藿香', 
-    mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoABGAalgjPp8TMpg5xYV_RR7mW2oLFnhQRzSaGsgHvL6wNActs7OeUTo0icf2T0YOUnC2TAxdCau8u05AjVIksH2n9xyoWcXY7qoJz1pvhqCUA5ZmOPalQs2tISAsil-9haPTpmWjj6KhRr6BZPVQCclvq2ro6fmg-8Cbpwy0WrUvYJazo1kkrhUIqyA/s16000/B.jpg', 
-    desc: '心靈渴望被溫柔接住。玫瑰帶來愉悅感，薰衣草安撫敏感神經，讓您感受到溫暖包覆。' 
-  },
-  TypeC: { 
-    title: '沉靜心流香水', 
-    names: '佛手柑、真正薰衣草、雪松', 
-    mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSOcFAl_QnInsDOd_AFcpmm_gV3uHHFpMDWDSAw-CZym6c4k18TuVUmf3u2nv8JrFhdklsKDhUzreyKOuT4AVljcKarKU5AHy8SkUHG_OLYfirqIPKkYZTRBxLfyLCCt8bDNyNp9EJQ6cSYgqucZMjrMtmezzYSo5ZoUM1Jr7FNhLyFgkIugN-4OB2uqk/s16000/C.jpg', 
-    desc: '您需要「卸下重擔」與「歸零」。佛手柑疏通鬱結，雪松帶來森林氣息，放鬆深層壓力。' 
-  },
-  TypeD: { 
-    title: '自信綻放香水', 
-    names: '佛手柑、花梨木、雪松', 
-    mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfcQse_eoj3HgXioYyjqPI_D6nQm3Z1svoyRPxYRcKof9Eth3T6tEovh_GjsmNLYatz4dGxsqn9YXlGmydUYfL7_6SoX3MNvLfsghmqOOgMxal36b8uAdkG3dZvlpxA7i4YVFg91PAiCmHL_jfPS0fMGmd00LTbz2B4vGglCN1RtkKJP8sEFINwpLIsp0/s16000/D.jpg', 
-    desc: '您需要清晰的表達力與勇氣。花梨木穩定思緒，雪松帶來堅定底氣，讓您自信面對挑戰。' 
-  }
+  TypeA: { title: '黃金能量香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxH6FgMFwmSUf8TwOPG5_w6QOi53dnsZegLIYDVugeMzsFG9swKj96Z6yw36b4sSjlwgtFXUIbYchBCcZd-a2AD-xC6MjId5Y_Dn3vz8vCm6hVzwo9KjR5S6Bx9nbqH1OZBDgAfgoSidMLq8y4GRQErJ2w9SMsCpTr0RvUs4ZlyQH7lL2BESz0cmN1g8E/s16000/A.jpg', desc: '您現在需要的是「提振」與「找回力量」。檀香穩定氣場，葡萄柚掃除腦中陰霾，重拾行動力。', names: '檀香、葡萄柚、依蘭' },
+  TypeB: { title: '幸福光芒香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoABGAalgjPp8TMpg5xYV_RR7mW2oLFnhQRzSaGsgHvL6wNActs7OeUTo0icf2T0YOUnC2TAxdCau8u05AjVIksH2n9xyoWcXY7qoJz1pvhqCUA5ZmOPalQs2tISAsil-9haPTpmWjj6KhRr6BZPVQCclvq2ro6fmg-8Cbpwy0WrUvYJazo1kkrhUIqyA/s16000/B.jpg', desc: '心靈渴望被溫柔接住。玫瑰帶來愉悅感，薰衣草安撫敏感神經，讓您感受到溫暖包覆。', names: '柳橙、薰衣草、玫瑰、廣藿香' },
+  TypeC: { title: '沉靜心流香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjSOcFAl_QnInsDOd_AFcpmm_gV3uHHFpMDWDSAw-CZym6c4k18TuVUmf3u2nv8JrFhdklsKDhUzreyKOuT4AVljcKarKU5AHy8SkUHG_OLYfirqIPKkYZTRBxLfyLCCt8bDNyNp9EJQ6cSYgqucZMjrMtmezzYSo5ZoUM1Jr7FNhLyFgkIugN-4OB2uqk/s16000/C.jpg', desc: '您需要「卸下重擔」與「歸零」。佛手柑疏通鬱結，雪松帶來森林氣息，放鬆深層壓力。', names: '佛手柑、真正薰衣草、雪松' },
+  TypeD: { title: '自信綻放香水', mainImg: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfcQse_eoj3HgXioYyjqPI_D6nQm3Z1svoyRPxYRcKof9Eth3T6tEovh_GjsmNLYatz4dGxsqn9YXlGmydUYfL7_6SoX3MNvLfsghmqOOgMxal36b8uAdkG3dZvlpxA7i4YVFg91PAiCmHL_jfPS0fMGmd00LTbz2B4vGglCN1RtkKJP8sEFINwpLIsp0/s16000/D.jpg', desc: '您需要清晰的表達力與勇氣。花梨木穩定思緒，雪松帶來堅定底氣，讓您自信面對挑戰。', names: '佛手柑、花梨木、雪松' }
 };
 
 let questions = [], current = 0, scores = {TypeA:0, TypeB:0, TypeC:0, TypeD:0}, mainData = {};
+
+async function init() {
+  try {
+    const res = await fetch(API_URL);
+    questions = await res.json();
+    if(questions && questions.length > 0) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+    }
+  } catch (e) {
+    document.getElementById('loadingMsg').innerText = "連線失敗，請檢查網路或重新整理。";
+  }
+}
 
 function toStep2() {
   mainData.name = document.getElementById('name').value;
@@ -117,21 +122,19 @@ function toStep2() {
   document.getElementById('step2').classList.remove('hidden');
 }
 
-async function startQuiz() {
+function startQuiz() {
   mainData.smellMemory = document.getElementById('smellMemory').value;
   mainData.stressLevel = document.getElementById('stressLevel').value;
   mainData.tiredLevel = document.getElementById('tiredLevel').value;
   document.getElementById('step2').classList.add('hidden');
   document.getElementById('quiz').classList.remove('hidden');
-  const res = await fetch(API_URL);
-  questions = await res.json();
   renderQ();
 }
 
 function renderQ() {
   const q = questions[current];
-  document.getElementById('qImg').src = q.image;
-  document.getElementById('qImg').style.display = q.image ? 'block' : 'none';
+  const qImg = document.getElementById('qImg');
+  if (q.image) { qImg.src = q.image; qImg.style.display = 'block'; } else { qImg.style.display = 'none'; }
   document.getElementById('qText').innerText = q.q;
   const list = document.getElementById('ansList');
   list.innerHTML = '';
@@ -151,7 +154,9 @@ function showRes() {
   mainData.resultType = final;
   const res = resultOutcomes[final];
   document.getElementById('resTitle').innerText = res.title;
-  document.getElementById('resMainImg').src = res.mainImg;
+  const resImg = document.getElementById('resMainImg');
+  resImg.src = res.mainImg;
+  resImg.style.display = 'block';
   document.getElementById('resDesc').innerText = res.desc;
   document.getElementById('result').classList.remove('hidden');
 }
@@ -165,6 +170,8 @@ async function submitAll() {
   document.getElementById('status').innerText = "✓ 送出成功！老師將會儘快聯繫您。";
   btn.style.display = 'none';
 }
+
+window.onload = init;
 </script>
 </body>
 </html>
