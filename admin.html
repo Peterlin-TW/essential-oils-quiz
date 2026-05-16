@@ -2,47 +2,62 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>管理分析後台 - 香氣覺察</title>
+  <title>芳療後台 - 數據分析</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { background: #f4f7f6; font-family: sans-serif; padding: 30px; color: #333; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    body { background: #f8f9fa; font-family: 'Noto Sans TC', sans-serif; padding: 20px; color: #444; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    h1 { text-align: center; color: #5c4a3c; margin-bottom: 30px; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-    .tag { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; color: white; }
-    .tag-a { background: #ff9a62; } .tag-b { background: #7d6b5d; } .tag-c { background: #ffcc80; color: #333; } .tag-d { background: #a2d2ff; color: #333; }
-    .count-badge { background: #fff3eb; color: #ff9a62; padding: 2px 8px; border-radius: 5px; font-weight: bold; }
+    th { background: #fcfcfc; color: #888; font-weight: 500; font-size: 0.9rem; }
+    .tag { padding: 4px 12px; border-radius: 8px; font-size: 0.85rem; color: white; font-weight: bold; }
+    .tag-a { background: #ff9a62; } /* 黃金能量 */
+    .tag-b { background: #e5989b; } /* 幸福光芒 */
+    .tag-c { background: #829ab1; } /* 沉靜心流 */
+    .tag-d { background: #b19cd9; } /* 自信綻放 */
+    .count-badge { background: #fff3eb; color: #ff9a62; padding: 2px 10px; border-radius: 6px; font-weight: bold; }
+    .loading-text { text-align: center; padding: 50px; color: #888; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>分析後台</h1>
+  <h1>芳香覺察問卷後台</h1>
   
-  <div class="card">
-    <canvas id="typeChart" style="max-height: 300px;"></canvas>
-  </div>
+  <div id="loading" class="loading-text">正在讀取最新數據...</div>
 
-  <div class="card">
-    <h3>精油備貨合計表</h3>
-    <table id="stockTable">
-      <thead><tr><th>精油名稱</th><th>需求次數</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <div id="mainContent" class="hidden" style="display:none;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div class="card">
+        <h3>身心類型佔比</h3>
+        <canvas id="typeChart"></canvas>
+      </div>
+      <div class="card">
+        <h3>精油備貨合計表</h3>
+        <table id="stockTable">
+          <thead><tr><th>精油名稱</th><th>需求次數</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
-  <div class="card">
-    <h3>詳細填答清單</h3>
-    <table id="memberTable">
-      <thead><tr><th>姓名/資訊</th><th>結果</th><th>建議精油</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <div class="card">
+      <h3>詳細填答名單</h3>
+      <table id="memberTable">
+        <thead><tr><th>時間 / 姓名</th><th>結果類型</th><th>建議配方內容</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
-  const API_URL = "您的GAS部署網址?type=admin";
+  // 💡 請確保這裡的網址後面有 ?type=admin
+  const API_URL = "https://script.google.com/macros/s/AKfycbw5NZ0PD2KK7mpJU-ORNLBeBqP4tsZp2MSWK0MkvBZJ6YVM1uGDmOJB3Mabg012bnRI/exec?type=admin";
+
   const typeMap = {
     'TypeA': { name: '黃金能量', class: 'tag-a' },
     'TypeB': { name: '幸福光芒', class: 'tag-b' },
@@ -51,55 +66,77 @@
   };
 
   async function loadData() {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    render(data.reverse());
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      
+      render(data.reverse());
+    } catch (e) {
+      document.getElementById('loading').innerText = "讀取失敗，請確認 API 網址與權限。";
+    }
   }
 
   function render(data) {
-    const typeCounts = { TypeA:0, TypeB:0, TypeC:0, TypeD:0 };
+    const typeCounts = { TypeA: 0, TypeB: 0, TypeC: 0, TypeD: 0 };
     const stockCounts = {};
     const memberBody = document.querySelector('#memberTable tbody');
     const stockBody = document.querySelector('#stockTable tbody');
 
+    memberBody.innerHTML = '';
+    stockBody.innerHTML = '';
+
     data.forEach(item => {
-      typeCounts[item.resultType]++;
-      // 統計精油
-      if(item.selectedProducts) {
-        item.selectedProducts.split('、').forEach(p => {
-          stockCounts[p] = (stockCounts[p] || 0) + 1;
+      // 統計結果類型
+      if (typeCounts.hasOwnProperty(item.resultType)) {
+        typeCounts[item.resultType]++;
+      }
+
+      // 統計精油 (以「、」或「, 」分割)
+      if (item.selectedProducts) {
+        const oils = item.selectedProducts.split(/[、,]/);
+        oils.forEach(o => {
+          const name = o.trim();
+          if (name) stockCounts[name] = (stockCounts[name] || 0) + 1;
         });
       }
+
       // 渲染清單
       const info = typeMap[item.resultType] || { name: item.resultType, class: '' };
       memberBody.innerHTML += `
         <tr>
-          <td><b>${item.name}</b><br><small>${item.contact}</small></td>
+          <td><small>${item.date || ''}</small><br><b>${item.name}</b><br><small>${item.contact}</small></td>
           <td><span class="tag ${info.class}">${info.name}</span></td>
-          <td>${item.selectedProducts}</td>
+          <td style="font-size: 0.9rem; color: #666;">${item.selectedProducts || '無'}</td>
         </tr>
       `;
     });
 
-    // 渲染合計表
-    Object.entries(stockCounts).sort((a,b)=>b[1]-a[1]).forEach(([name, count]) => {
-      stockBody.innerHTML += `<tr><td>${name}</td><td><span class="count-badge">${count}</span></td></tr>`;
+    // 渲染精油合計表 (由多到少排序)
+    Object.entries(stockCounts).sort((a, b) => b[1] - a[1]).forEach(([name, count]) => {
+      stockBody.innerHTML += `<tr><td>${name}</td><td><span class="count-badge">${count} 份</span></td></tr>`;
     });
 
-    // 圓餅圖
+    // 渲染圓餅圖
     new Chart(document.getElementById('typeChart'), {
       type: 'pie',
       data: {
         labels: ['黃金能量', '幸福光芒', '沉靜心流', '自信綻放'],
         datasets: [{
           data: [typeCounts.TypeA, typeCounts.TypeB, typeCounts.TypeC, typeCounts.TypeD],
-          backgroundColor: ['#ff9a62', '#7d6b5d', '#ffcc80', '#a2d2ff']
+          backgroundColor: ['#ff9a62', '#e5989b', '#ffcc80', '#b19cd9'],
+          borderWidth: 0
         }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' } }
       }
     });
   }
 
-  loadData();
+  window.onload = loadData;
 </script>
 
 </body>
